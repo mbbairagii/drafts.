@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Caveat:wght@400;600;700&family=Dancing+Script:wght@400;700&family=Kalam:wght@300;400;700&family=Patrick+Hand&family=Satisfy&family=Pacifico&display=swap');
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    background: #0C0C0C;
+    color: #F5F2ED;
+    font-family: Georgia, 'Times New Roman', serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+input,
+textarea,
+button {
+    font-family: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: rgba(255, 255, 255, 0.15);
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: currentColor;
+    cursor: pointer;
+    box-shadow: 0 0 6px currentColor;
+}
+
+input[type="color"] {
+    -webkit-appearance: none;
+    border: none;
+    cursor: pointer;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 5px;
+}
+
+* {
+    cursor: none !important;
+}
