@@ -1,6 +1,53 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import stampImg from '../assets/11.png'
+
+const BG = '#000000'
+const OFF = '#F0EEF5'
+const SIL = '#8A94A8'
+const SIL2 = '#B8C4D8'
+const GOLD = '#8B6F3E'
+const GOLD2 = '#C4A882'
+const DIM = (a: number) => `rgba(184,196,216,${a})`
+const FONT = "'IM Fell English', serif"
+const SANS = "'Palatino Linotype', serif"
+
+const LEFT_WORDS = ['your name.', 'your fear.', 'your voice.', 'your grief.', 'your truth.', 'your shame.', 'your hope.']
+const RIGHT_WORDS = ['hidden.', 'kept.', 'buried.', 'secret.', 'safe.', 'yours.', 'forever.']
+
+const SPARKS: { top: string; left: string; size: number; delay: number; dur: number }[] = [
+    { top: '5%', left: '3%', size: 3, delay: 0, dur: 3.2 },
+    { top: '10%', left: '15%', size: 2, delay: 0.6, dur: 4 },
+    { top: '18%', left: '8%', size: 4, delay: 1.4, dur: 3.6 },
+    { top: '25%', left: '28%', size: 2, delay: 0.3, dur: 5 },
+    { top: '33%', left: '4%', size: 3, delay: 2.1, dur: 3.8 },
+    { top: '42%', left: '19%', size: 2, delay: 0.6, dur: 4.4 },
+    { top: '51%', left: '10%', size: 3, delay: 1.8, dur: 3.2 },
+    { top: '60%', left: '24%', size: 2, delay: 0.9, dur: 4.2 },
+    { top: '70%', left: '6%', size: 4, delay: 1.2, dur: 3.5 },
+    { top: '78%', left: '17%', size: 2, delay: 2.4, dur: 4.8 },
+    { top: '88%', left: '30%', size: 3, delay: 0.9, dur: 3.9 },
+    { top: '7%', left: '72%', size: 2, delay: 1.6, dur: 4.1 },
+    { top: '15%', left: '84%', size: 4, delay: 0.2, dur: 3.3 },
+    { top: '23%', left: '92%', size: 2, delay: 2.8, dur: 5.2 },
+    { top: '31%', left: '78%', size: 3, delay: 3.1, dur: 4.6 },
+    { top: '40%', left: '88%', size: 2, delay: 1.0, dur: 3.7 },
+    { top: '49%', left: '96%', size: 3, delay: 1.7, dur: 4.3 },
+    { top: '57%', left: '74%', size: 2, delay: 0.5, dur: 3.9 },
+    { top: '66%', left: '90%', size: 4, delay: 2.2, dur: 5.1 },
+    { top: '75%', left: '80%', size: 2, delay: 0.7, dur: 4.0 },
+    { top: '84%', left: '68%', size: 3, delay: 1.3, dur: 3.6 },
+    { top: '92%', left: '85%', size: 2, delay: 2.0, dur: 4.5 },
+    { top: '12%', left: '45%', size: 2, delay: 0.4, dur: 4.8 },
+    { top: '38%', left: '52%', size: 3, delay: 1.9, dur: 3.4 },
+    { top: '63%', left: '48%', size: 2, delay: 2.6, dur: 5.0 },
+    { top: '87%', left: '55%', size: 3, delay: 0.8, dur: 3.8 },
+    { top: '20%', left: '60%', size: 2, delay: 3.2, dur: 4.2 },
+    { top: '74%', left: '40%', size: 3, delay: 1.1, dur: 3.7 },
+    { top: '95%', left: '20%', size: 2, delay: 0.2, dur: 4.6 },
+    { top: '3%', left: '55%', size: 4, delay: 1.5, dur: 3.3 },
+]
 
 export default function RegisterScreen() {
     const [email, setEmail] = useState('')
@@ -8,12 +55,20 @@ export default function RegisterScreen() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const [mounted, setMounted] = useState(false)
+    const [focused, setFocused] = useState<string | null>(null)
     const { register } = useAuth()
     const navigate = useNavigate()
+
+    useEffect(() => {
+        const t = setTimeout(() => setMounted(true), 80)
+        return () => clearTimeout(t)
+    }, [])
 
     const handleSubmit = async () => {
         if (!email || !username || !password) { setError('Fill in all fields.'); return }
         if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
+        setError('')
         setLoading(true)
         try {
             await register(email, username, password)
@@ -25,62 +80,171 @@ export default function RegisterScreen() {
     }
 
     return (
-        <div style={{ height: '100vh', background: '#0C0C0C', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(ellipse at 70% 30%, rgba(108,99,255,0.06) 0%, transparent 60%), radial-gradient(ellipse at 30% 70%, rgba(26,107,255,0.04) 0%, transparent 60%)' }} />
+        <div style={{ height: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', paddingBottom: '14vh' }}>
 
-            <div className="anim-float-in" style={{ width: 440, position: 'relative', zIndex: 10 }}>
-                <div style={{ textAlign: 'center', marginBottom: 48 }}>
-                    <h1 style={{ fontFamily: "'IM Fell English', Georgia, serif", fontSize: 52, color: '#F5F2ED', letterSpacing: -1, margin: 0 }}>drafts.</h1>
-                    <p style={{ color: '#3A3A3A', fontSize: 13, marginTop: 10, letterSpacing: 2, fontFamily: 'Georgia, serif' }}>the folder nobody sees.</p>
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, opacity: 0.03, pointerEvents: 'none', zIndex: 1 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 55% at 50% 40%, rgba(138,148,168,.08) 0%, transparent 65%), radial-gradient(ellipse 50% 40% at 8% 70%, rgba(184,196,216,.06) 0%, transparent 55%), radial-gradient(ellipse 45% 38% at 90% 18%, rgba(138,148,168,.05) 0%, transparent 55%)', pointerEvents: 'none', zIndex: 1 }} />
+
+            {SPARKS.map((s, i) => (
+                <div key={i} style={{ position: 'fixed', pointerEvents: 'none', zIndex: 2, top: s.top, left: s.left, width: s.size * 5, height: s.size * 5, animation: `sparkle ${s.dur}s ${s.delay}s ease-in-out infinite` }}>
+                    <div style={{ position: 'absolute', width: '100%', height: 1, top: '50%', left: 0, transform: 'translateY(-50%)', background: 'rgba(220,228,240,.8)', borderRadius: 2 }} />
+                    <div style={{ position: 'absolute', height: '100%', width: 1, left: '50%', top: 0, transform: 'translateX(-50%)', background: 'rgba(220,228,240,.8)', borderRadius: 2 }} />
+                </div>
+            ))}
+
+            {[
+                { top: '8%', left: '5%', dur: 7, delay: 0 },
+                { top: '22%', left: '20%', dur: 9, delay: 1.2 },
+                { top: '46%', left: '3%', dur: 8, delay: 2.5 },
+                { top: '68%', left: '14%', dur: 10, delay: 0.8 },
+                { top: '14%', left: '78%', dur: 7.5, delay: 1.8 },
+                { top: '36%', left: '92%', dur: 9, delay: 0.3 },
+                { top: '60%', left: '73%', dur: 8.5, delay: 2.1 },
+                { top: '82%', left: '86%', dur: 11, delay: 1.5 },
+                { top: '55%', left: '36%', dur: 8, delay: 3.0 },
+                { top: '30%', left: '62%', dur: 9.5, delay: 0.6 },
+            ].map((p, i) => (
+                <div key={i} style={{ position: 'fixed', pointerEvents: 'none', zIndex: 2, top: p.top, left: p.left, fontSize: 16, color: 'rgba(184,196,216,.22)', animation: `plusFloat ${p.dur}s ${p.delay}s ease-in-out infinite`, fontWeight: 300, lineHeight: 1 }}>+</div>
+            ))}
+
+            <div style={{ position: 'fixed', top: 28, right: 44, width: 180, height: 180, zIndex: 20, pointerEvents: 'none', opacity: mounted ? 1 : 0, animation: mounted ? 'stampDrop .9s .2s cubic-bezier(.16,1,.3,1) both' : 'none', filter: 'drop-shadow(0 12px 32px rgba(0,0,0,.9)) drop-shadow(0 3px 8px rgba(138,148,168,.2))' }}>
+                <img src={stampImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+            </div>
+
+            <div style={{ position: 'absolute', left: '4%', top: 0, bottom: 0, width: '22vw', zIndex: 2, pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0, marginTop: '-12vh' }}>
+                {LEFT_WORDS.map((w, i) => (
+                    <p key={i} style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'clamp(15px,1.8vw,24px)', color: `rgba(184,196,216,${0.08 + i * 0.025})`, margin: '0 0 8px', letterSpacing: 1, transform: `translateX(${i * 10}px)`, whiteSpace: 'nowrap', opacity: mounted ? 1 : 0, transition: `opacity 1.2s ${0.5 + i * 0.13}s ease`, animation: mounted ? `driftL ${12 + i * 1.8}s ease-in-out infinite` : 'none', animationDelay: `${i * 0.4}s` }}>{w}</p>
+                ))}
+            </div>
+
+            <div style={{ position: 'absolute', right: '4%', top: 0, bottom: 0, width: '22vw', zIndex: 2, pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', gap: 0, marginTop: '-12vh' }}>
+                {RIGHT_WORDS.map((w, i) => (
+                    <p key={i} style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'clamp(15px,1.8vw,24px)', color: `rgba(184,196,216,${0.08 + i * 0.025})`, margin: '0 0 8px', letterSpacing: 1, transform: `translateX(-${i * 10}px)`, whiteSpace: 'nowrap', opacity: mounted ? 1 : 0, transition: `opacity 1.2s ${0.5 + i * 0.13}s ease`, animation: mounted ? `driftR ${12 + i * 1.8}s ease-in-out infinite` : 'none', animationDelay: `${i * 0.4}s` }}>{w}</p>
+                ))}
+            </div>
+
+            <div style={{ position: 'absolute', bottom: -40, left: 0, right: 0, zIndex: 1, overflow: 'hidden', opacity: mounted ? 1 : 0, transition: 'opacity 2.5s 0.3s ease', pointerEvents: 'none', userSelect: 'none' }}>
+                <p style={{ fontFamily: 'Georgia, serif', fontSize: '37vw', fontWeight: 400, color: 'transparent', WebkitTextStroke: '1px rgba(184,196,216,0.055)', backgroundClip: 'text', WebkitBackgroundClip: 'text', backgroundImage: 'linear-gradient(180deg, rgba(184,196,216,0.15) 0%, rgba(138,148,168,0.06) 50%, rgba(138,148,168,0.01) 100%)', margin: 0, padding: 0, lineHeight: 0.82, whiteSpace: 'nowrap', letterSpacing: '-0.02em' }}>drafts.</p>
+            </div>
+
+            <div style={{ position: 'relative', zIndex: 10, width: 520, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.97)', transition: 'all 1.1s 0.2s cubic-bezier(0.16,1,0.3,1)', marginTop: '-10vh' }}>
+
+                <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 14, marginBottom: 12, opacity: mounted ? 1 : 0, transition: 'opacity 1s 0.7s ease' }}>
+                        <div style={{ width: 32, height: 1, background: 'linear-gradient(90deg, transparent, rgba(184,196,216,0.45))' }} />
+                        <p style={{ fontFamily: SANS, fontSize: 9, color: 'rgba(184,196,216,0.5)', letterSpacing: '0.55em', textTransform: 'uppercase', margin: 0 }}>your archive</p>
+                        <div style={{ width: 32, height: 1, background: 'linear-gradient(270deg, transparent, rgba(184,196,216,0.45))' }} />
+                    </div>
+                    <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 72, color: 'rgba(240,236,248,0.97)', letterSpacing: -1, margin: 0, lineHeight: 1, textShadow: '0 0 80px rgba(184,196,216,0.3)', opacity: mounted ? 1 : 0, transition: 'opacity 1s 0.5s ease' }}>drafts.</h1>
+                    <p style={{ fontFamily: SANS, fontStyle: 'italic', fontSize: 12, color: 'rgba(184,196,216,0.45)', marginTop: 10, letterSpacing: '0.4em', textTransform: 'uppercase', opacity: mounted ? 1 : 0, transition: 'opacity 1s 0.8s ease' }}>never meant to be sent.</p>
                 </div>
 
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: '40px 36px' }}>
-                    <p style={{ color: '#6B6B6B', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 28, fontFamily: 'Georgia, serif' }}>Create your archive</p>
+                <div style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(184,196,216,0.1)', borderRadius: 4, padding: '44px 48px 40px', backdropFilter: 'blur(28px)', boxShadow: '0 40px 140px rgba(0,0,0,0.96), inset 0 1px 0 rgba(184,196,216,0.08), 0 0 100px rgba(138,148,168,0.03)', position: 'relative', overflow: 'hidden' }}>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                        <Field label="Username" type="text" value={username} onChange={setUsername} placeholder="what do we call you" />
-                        <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@somewhere.com" />
-                        <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="make it unguessable" onEnter={handleSubmit} />
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, rgba(184,196,216,0.35), transparent)' }} />
+
+                    <p style={{ fontFamily: SANS, fontSize: 9, color: 'rgba(184,196,216,0.45)', letterSpacing: '0.6em', textTransform: 'uppercase', margin: '0 0 28px' }}>create your archive</p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                        {([
+                            { key: 'username', label: 'Username', type: 'text', val: username, set: setUsername, ph: 'what do we call you' },
+                            { key: 'email', label: 'Email', type: 'email', val: email, set: setEmail, ph: 'you@somewhere.com' },
+                            { key: 'password', label: 'Password', type: 'password', val: password, set: setPassword, ph: 'make it unguessable' },
+                        ] as const).map(({ key, label, type, val, set, ph }) => (
+                            <RegField key={key} label={label} type={type} value={val} onChange={set} placeholder={ph} focused={focused === key} onFocus={() => setFocused(key)} onBlur={() => setFocused(null)} onEnter={key === 'password' ? handleSubmit : undefined} />
+                        ))}
                     </div>
 
-                    {error && <p style={{ color: '#FF2244', fontSize: 13, marginTop: 16, fontFamily: 'Georgia, serif' }}>{error}</p>}
+                    {error && (
+                        <p style={{ fontFamily: SANS, fontStyle: 'italic', fontSize: 12, color: 'rgba(220,80,80,0.9)', marginTop: 16, letterSpacing: '0.15em', animation: 'shakeErr 0.4s ease' }}>{error}</p>
+                    )}
 
-                    <button
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        style={{ width: '100%', marginTop: 28, padding: '15px', borderRadius: 12, border: 'none', background: loading ? '#1a1a1a' : 'linear-gradient(135deg, #6c63ff, #1A6BFF)', color: '#fff', fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: "'IM Fell English', Georgia, serif", letterSpacing: 1, transition: 'all 0.2s', boxShadow: loading ? 'none' : '0 4px 24px rgba(108,99,255,0.35)' }}
-                        onMouseEnter={e => { if (!loading) (e.currentTarget).style.transform = 'translateY(-1px)' }}
-                        onMouseLeave={e => { (e.currentTarget).style.transform = 'translateY(0)' }}
-                    >
-                        {loading ? 'Creating...' : 'Begin Writing'}
+                    <button onClick={handleSubmit} disabled={loading} style={{ width: '100%', marginTop: 30, padding: '18px', border: '1px solid rgba(139,111,62,0.35)', borderRadius: 3, background: loading ? 'rgba(139,111,62,0.05)' : 'linear-gradient(135deg, rgba(139,111,62,0.2), rgba(120,90,35,0.25))', color: loading ? 'rgba(196,168,130,0.4)' : 'rgba(220,196,150,0.95)', fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: SANS, fontStyle: 'italic', letterSpacing: '0.3em', textTransform: 'uppercase', transition: 'all 0.35s ease', boxShadow: loading ? 'none' : '0 0 40px rgba(139,111,62,0.1), inset 0 1px 0 rgba(139,111,62,0.12)', outline: 'none' }}
+                        onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(139,111,62,0.32), rgba(120,90,35,0.36))'; e.currentTarget.style.borderColor = 'rgba(139,111,62,0.6)'; e.currentTarget.style.letterSpacing = '0.38em' } }}
+                        onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(139,111,62,0.2), rgba(120,90,35,0.25))'; e.currentTarget.style.borderColor = 'rgba(139,111,62,0.35)'; e.currentTarget.style.letterSpacing = '0.3em' } }}>
+                        {loading ? 'creating your archive...' : 'begin writing'}
                     </button>
 
-                    <p style={{ color: '#3A3A3A', fontSize: 13, marginTop: 20, textAlign: 'center', fontFamily: 'Georgia, serif' }}>
-                        Already have drafts?{' '}
-                        <Link to="/login" style={{ color: '#6c63ff', textDecoration: 'none' }}>Sign in</Link>
-                    </p>
+                    <div style={{ marginTop: 22, display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ flex: 1, height: 1, background: 'rgba(184,196,216,0.07)' }} />
+                        <p style={{ fontFamily: SANS, fontStyle: 'italic', fontSize: 11, color: 'rgba(184,196,216,0.32)', margin: 0, letterSpacing: '0.15em', whiteSpace: 'nowrap' }}>
+                            already have drafts?{' '}
+                            <Link to="/login" style={{ color: 'rgba(184,196,216,0.7)', textDecoration: 'none', transition: 'color 0.25s ease' }}
+                                onMouseEnter={e => (e.currentTarget.style.color = 'rgba(220,228,240,1)')}
+                                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(184,196,216,0.7)')}>sign in</Link>
+                        </p>
+                        <div style={{ flex: 1, height: 1, background: 'rgba(184,196,216,0.07)' }} />
+                    </div>
                 </div>
             </div>
+
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap');
+                @keyframes shakeErr {
+                    0%,100% { transform: translateX(0); }
+                    20%     { transform: translateX(-6px); }
+                    40%     { transform: translateX(6px); }
+                    60%     { transform: translateX(-4px); }
+                    80%     { transform: translateX(4px); }
+                }
+                @keyframes fieldGlow {
+                    0%,100% { opacity: 0.5; }
+                    50%     { opacity: 1; }
+                }
+                @keyframes driftL {
+                    0%,100% { transform: translateX(var(--tx,0px)) translateY(0px); }
+                    50%     { transform: translateX(var(--tx,0px)) translateY(-6px); }
+                }
+                @keyframes driftR {
+                    0%,100% { transform: translateX(var(--tx,0px)) translateY(0px); }
+                    50%     { transform: translateX(var(--tx,0px)) translateY(-6px); }
+                }
+                @keyframes sparkle {
+                    0%,100% { opacity: 0; transform: scale(0) rotate(0deg); }
+                    30%,70% { opacity: 1; transform: scale(1) rotate(180deg); }
+                }
+                @keyframes plusFloat {
+                    0%,100% { transform: translateY(0px) rotate(0deg); opacity: .18; }
+                    50%     { transform: translateY(-9px) rotate(15deg); opacity: .35; }
+                }
+                @keyframes stampDrop {
+                    0%   { opacity:0; transform:translateY(-60px) scale(1.1); filter:blur(4px); }
+                    65%  { opacity:1; transform:translateY(6px) scale(1.01); filter:blur(0); }
+                    82%  { transform:translateY(-3px) scale(.99); }
+                    100% { opacity:1; transform:translateY(0) scale(1); }
+                }
+                * { box-sizing: border-box; }
+                input::placeholder { color: rgba(184,196,216,0.25); font-style: italic; }
+                input:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px ${BG} inset !important; -webkit-text-fill-color: rgba(240,236,248,0.95) !important; }
+            `}</style>
         </div>
     )
 }
 
-function Field({ label, type, value, onChange, placeholder, onEnter }: {
+function RegField({ label, type, value, onChange, placeholder, focused, onFocus, onBlur, onEnter }: {
     label: string; type: string; value: string
-    onChange: (v: string) => void; placeholder: string; onEnter?: () => void
+    onChange: (v: string) => void; placeholder: string
+    focused: boolean; onFocus: () => void; onBlur: () => void; onEnter?: () => void
 }) {
     return (
         <div>
-            <label style={{ display: 'block', marginBottom: 7, color: '#6B6B6B', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', fontFamily: 'Georgia, serif' }}>{label}</label>
-            <input
-                type={type} value={value}
-                onChange={e => onChange(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && onEnter?.()}
-                placeholder={placeholder}
-                style={{ width: '100%', padding: '13px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, color: '#F5F2ED', fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'Georgia, serif', transition: 'border-color 0.2s' }}
-                onFocus={e => e.target.style.borderColor = 'rgba(108,99,255,0.5)'}
-                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.07)'}
-            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9, fontFamily: "'Palatino Linotype', serif", fontSize: 9, color: focused ? 'rgba(220,228,240,0.8)' : 'rgba(184,196,216,0.38)', letterSpacing: '0.55em', textTransform: 'uppercase', transition: 'color 0.3s ease' }}>
+                <div style={{ width: focused ? 16 : 6, height: 1, background: focused ? 'rgba(220,228,240,0.7)' : 'rgba(184,196,216,0.25)', transition: 'all 0.3s ease' }} />
+                {label}
+            </label>
+            <div style={{ position: 'relative' }}>
+                <input
+                    type={type} value={value}
+                    onChange={e => onChange(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && onEnter?.()}
+                    onFocus={onFocus} onBlur={onBlur}
+                    placeholder={placeholder}
+                    style={{ width: '100%', padding: '15px 20px', background: focused ? 'rgba(184,196,216,0.05)' : 'rgba(255,255,255,0.025)', border: `1px solid ${focused ? 'rgba(184,196,216,0.4)' : 'rgba(184,196,216,0.12)'}`, borderRadius: 3, color: 'rgba(240,236,248,0.97)', fontSize: 14, outline: 'none', fontFamily: "'Palatino Linotype', Palatino, serif", transition: 'all 0.3s ease', boxShadow: focused ? '0 0 28px rgba(184,196,216,0.08), inset 0 1px 0 rgba(184,196,216,0.07)' : 'none', letterSpacing: type === 'password' ? 4 : 0.3 }}
+                />
+                {focused && (
+                    <div style={{ position: 'absolute', bottom: 0, left: '8%', right: '8%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(184,196,216,0.55), transparent)', animation: 'fieldGlow 2s ease-in-out infinite' }} />
+                )}
+            </div>
         </div>
     )
 }

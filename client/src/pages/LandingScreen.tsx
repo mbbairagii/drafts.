@@ -1,315 +1,459 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import skullStamp from '../assets/11.png'
-import temple from '../assets/22.jpeg'
-import hands from '../assets/44.jpeg'
-import script from '../assets/55.jpeg'
-import eyes from '../assets/66.jpeg'
+import skullImg from '../assets/00.png'
+import handImg from '../assets/01.png'
 
-const P = '#EDE4D0'
-const C = '#F8F4EB'
-const INK = '#1A0F06'
-const INK2 = '#251508'
-const T = '#A8441F'
-const T2 = '#7A2E10'
-const MID = 'rgba(26,15,6,0.4)'
-const F = 'rgba(26,15,6,0.06)'
+const INK = '#06050A'
+const OFF = '#EDE8DF'
+const RUST = '#7C3318'
+const DIM = (a: number) => `rgba(237,232,223,${a})`
+const FONT = "'Libre Baskerville', Georgia, serif"
+const SANS = "'DM Sans', system-ui, sans-serif"
+
+const ABOUT_FEATURES = [
+    { n: '01', t: 'Realistic diary', b: 'A physical book at center screen. Leather cover, elastic band. Click open, flip real pages.' },
+    { n: '02', t: 'Custom handwriting font', b: 'Upload a photo of your alphabet. Every word you type appears in your own handwriting.' },
+    { n: '03', t: 'Draw & annotate', b: 'Pen, pencil, highlighter, eraser. Draw directly on any page with a full canvas layer.' },
+    { n: '04', t: 'Stickers & photos', b: 'Drag stickers onto pages. Upload photos and place them like a scrapbook.' },
+    { n: '05', t: 'Six cover styles', b: 'Full grain leather. Aged vellum. Scarlet morocco. Midnight cloth. Raw linen. Bone paper.' },
+    { n: '06', t: 'Password protected', b: 'Every diary locks with a password or pattern. Encrypted at rest. We store ciphertext only.' },
+    { n: '07', t: 'Page flip animation', b: 'Physics-based page turns that feel exactly like a real book.' },
+    { n: '08', t: 'Zero ads, zero tracking', b: 'Your thoughts are not a product. No ads, no analytics, no selling your data. Ever.' },
+]
 
 export default function LandingScreen() {
     const navigate = useNavigate()
-    const [mounted, setMounted] = useState(false)
-    const [hov, setHov] = useState(false)
-    const [vis, setVis] = useState<Set<string>>(new Set())
-    const containerRef = useRef<HTMLDivElement>(null)
-    const dotRef = useRef<HTMLDivElement>(null)
-    const ringRef = useRef<HTMLDivElement>(null)
-    const rp = useRef({ x: -100, y: -100 })
-    const raf = useRef(0)
-    const sRefs = useRef<Map<string, HTMLElement>>(new Map())
+    const trackRef = useRef<HTMLDivElement>(null)
+    const rafRef = useRef(0)
+    const targetX = useRef(0)
+    const currentX = useRef(0)
 
-    useEffect(() => { setTimeout(() => setMounted(true), 60) }, [])
-
-    useEffect(() => {
-        const fn = (e: MouseEvent) => {
-            if (dotRef.current) { dotRef.current.style.left = e.clientX + 'px'; dotRef.current.style.top = e.clientY + 'px' }
-        }
-        window.addEventListener('mousemove', fn)
-        return () => window.removeEventListener('mousemove', fn)
-    }, [])
+    const [pct, setPct] = useState(0)
+    const [loaderDone, setLoaderDone] = useState(false)
+    const [loaderGone, setLoaderGone] = useState(false)
+    const [progress, setProgress] = useState(0)
+    const [aboutOpen, setAboutOpen] = useState(false)
+    const [activePanel, setActivePanel] = useState(0)
 
     useEffect(() => {
-        const lerp = (a: number, b: number, t: number) => a + (b - a) * t
-        const tick = () => {
-            if (dotRef.current) {
-                rp.current.x = lerp(rp.current.x, parseFloat(dotRef.current.style.left) || 0, 0.08)
-                rp.current.y = lerp(rp.current.y, parseFloat(dotRef.current.style.top) || 0, 0.08)
+        let cur = 0
+        const iv = setInterval(() => {
+            cur = Math.min(100, cur + Math.random() * 8 + 2)
+            setPct(Math.round(cur))
+            if (cur >= 100) {
+                clearInterval(iv)
+                setTimeout(() => setLoaderDone(true), 400)
+                setTimeout(() => setLoaderGone(true), 1300)
             }
-            if (ringRef.current) { ringRef.current.style.left = rp.current.x + 'px'; ringRef.current.style.top = rp.current.y + 'px' }
-            raf.current = requestAnimationFrame(tick)
-        }
-        raf.current = requestAnimationFrame(tick)
-        return () => cancelAnimationFrame(raf.current)
+        }, 85)
+        return () => clearInterval(iv)
     }, [])
 
     useEffect(() => {
-        if (!mounted) return
-        const obs = new IntersectionObserver(entries => {
-            entries.forEach(e => { if (e.isIntersecting) setVis(prev => new Set([...prev, e.target.getAttribute('data-s') || ''])) })
-        }, { threshold: 0.08 })
-        sRefs.current.forEach(el => obs.observe(el))
-        return () => obs.disconnect()
-    }, [mounted])
+        if (!loaderGone) return
+        const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+        const getMax = () => trackRef.current ? trackRef.current.scrollWidth - window.innerWidth : 0
 
-    const sr = useCallback((id: string) => (el: HTMLElement | null) => { if (el) sRefs.current.set(id, el) }, [])
-    const v = (id: string) => vis.has(id)
-    const on = () => setHov(true)
-    const off = () => setHov(false)
-
-    const covers = [
-        { name: 'Memento Mori', sub: 'full grain leather', bg: 'linear-gradient(160deg,#1a0c04 0%,#0d0602 100%)', spine: 'linear-gradient(180deg,#3a1a08,#1a0c04)', ac: 'rgba(194,148,72,0.85)', tex: 'repeating-linear-gradient(45deg,rgba(255,255,255,0.012) 0px,rgba(255,255,255,0.012) 1px,transparent 1px,transparent 8px)' },
-        { name: 'Elegy', sub: 'aged vellum', bg: 'linear-gradient(160deg,#2a2018 0%,#16100a 100%)', spine: 'linear-gradient(180deg,#4a3828,#2a2018)', ac: 'rgba(220,200,165,0.7)', tex: 'repeating-linear-gradient(0deg,rgba(255,255,255,0.015) 0px,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 6px)' },
-        { name: 'Fever Dreams', sub: 'scarlet morocco', bg: 'linear-gradient(160deg,#2a0606 0%,#120202 100%)', spine: 'linear-gradient(180deg,#4a0a0a,#2a0606)', ac: 'rgba(200,50,50,0.75)', tex: 'repeating-linear-gradient(135deg,rgba(255,255,255,0.01) 0px,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 7px)' },
-        { name: 'Séance', sub: 'midnight cloth', bg: 'linear-gradient(160deg,#0a0a12 0%,#050508 100%)', spine: 'linear-gradient(180deg,#141420,#0a0a12)', ac: 'rgba(130,110,200,0.7)', tex: 'radial-gradient(circle at 50% 50%,rgba(130,110,200,0.04) 0%,transparent 60%)' },
-        { name: 'The Longest Summer', sub: 'raw linen', bg: 'linear-gradient(160deg,#1e1a0e 0%,#100e06 100%)', spine: 'linear-gradient(180deg,#3a3218,#1e1a0e)', ac: 'rgba(180,155,80,0.72)', tex: 'repeating-linear-gradient(90deg,rgba(255,255,255,0.014) 0px,rgba(255,255,255,0.014) 1px,transparent 1px,transparent 9px)' },
-        { name: 'Haunt', sub: 'bone paper', bg: 'linear-gradient(160deg,#1c1814 0%,#0e0c08 100%)', spine: 'linear-gradient(180deg,#342e26,#1c1814)', ac: 'rgba(230,220,200,0.45)', tex: 'repeating-linear-gradient(45deg,rgba(255,255,255,0.01) 0px,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 5px)' },
-    ]
-
-    const mq = ['drafts.', 'your words', 'never sent', 'written tonight', 'my dearest,', 'keep it', 'lock it away', 'just you']
+        const onWheel = (e: WheelEvent) => { e.preventDefault(); targetX.current += e.deltaY * 1.05 + e.deltaX * 0.5 }
+        let ty = 0
+        const onTS = (e: TouchEvent) => { ty = e.touches[0].clientY }
+        const onTM = (e: TouchEvent) => { e.preventDefault(); targetX.current += (ty - e.touches[0].clientY) * 1.3; ty = e.touches[0].clientY }
+        const onKey = (e: KeyboardEvent) => {
+            if (['ArrowRight', 'ArrowDown'].includes(e.key)) targetX.current += window.innerWidth * 0.85
+            if (['ArrowLeft', 'ArrowUp'].includes(e.key)) targetX.current -= window.innerWidth * 0.85
+        }
+        const tick = () => {
+            const max = getMax()
+            targetX.current = Math.max(0, Math.min(targetX.current, max))
+            currentX.current = lerp(currentX.current, targetX.current, 0.068)
+            if (trackRef.current) trackRef.current.style.transform = `translateX(${-currentX.current}px)`
+            const p = max > 0 ? currentX.current / max : 0
+            setProgress(p)
+            setActivePanel(p > 0.5 ? 1 : 0)
+            rafRef.current = requestAnimationFrame(tick)
+        }
+        window.addEventListener('wheel', onWheel, { passive: false })
+        window.addEventListener('touchstart', onTS, { passive: true })
+        window.addEventListener('touchmove', onTM, { passive: false })
+        window.addEventListener('keydown', onKey)
+        rafRef.current = requestAnimationFrame(tick)
+        return () => {
+            window.removeEventListener('wheel', onWheel)
+            window.removeEventListener('touchstart', onTS)
+            window.removeEventListener('touchmove', onTM)
+            window.removeEventListener('keydown', onKey)
+            cancelAnimationFrame(rafRef.current)
+        }
+    }, [loaderGone])
 
     return (
-        <div ref={containerRef} style={{ overflowY: 'scroll', background: INK, cursor: 'none', fontFamily: 'serif', position: 'relative' }}>
-
-            <div ref={dotRef} style={{ position: 'fixed', width: hov ? 11 : 7, height: hov ? 11 : 7, background: hov ? T : P, borderRadius: '50%', pointerEvents: 'none', zIndex: 999999, transform: 'translate(-50%,-50%)', transition: 'width 0.2s,height 0.2s,background 0.2s', willChange: 'left,top' }} />
-            <div ref={ringRef} style={{ position: 'fixed', width: hov ? 56 : 38, height: hov ? 56 : 38, border: hov ? `1.5px solid ${T}` : `1px solid rgba(232,220,200,0.28)`, borderRadius: '50%', pointerEvents: 'none', zIndex: 999998, transform: 'translate(-50%,-50%)', transition: 'width 0.35s,height 0.35s,border 0.3s', willChange: 'left,top' }} />
-
-            <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 500, padding: '18px 52px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: mounted ? 1 : 0, transition: 'opacity 1s 0.5s', background: 'rgba(20,10,4,0.82)', backdropFilter: 'blur(22px)', borderBottom: '1px solid rgba(232,220,200,0.06)' }}>
-                <p style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 22, color: P, margin: 0, letterSpacing: 0.5, opacity: 0.9 }}>drafts.</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
-                    {['about', 'diaries'].map(t => (
-                        <span key={t} style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 10, color: 'rgba(232,220,200,0.35)', letterSpacing: '0.48em', textTransform: 'uppercase', cursor: 'none', transition: 'color 0.3s' }}
-                            onMouseEnter={e => { e.currentTarget.style.color = P; on() }}
-                            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(232,220,200,0.35)'; off() }}>{t}</span>
-                    ))}
-                    <button onClick={() => navigate('/register')} style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 11, letterSpacing: '0.3em', textTransform: 'uppercase', color: INK, background: P, border: 'none', padding: '11px 26px', cursor: 'none', transition: 'all 0.3s' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = T; e.currentTarget.style.color = P; on() }}
-                        onMouseLeave={e => { e.currentTarget.style.background = P; e.currentTarget.style.color = INK; off() }}>begin →</button>
-                </div>
-            </nav>
-
-            <section style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ position: 'absolute', inset: 0 }}>
-                    <img src={temple} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', filter: 'brightness(0.38) saturate(0.7) sepia(0.3)', display: 'block' }} />
-                </div>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(20,10,4,0.3) 0%, rgba(20,10,4,0.15) 40%, rgba(20,10,4,0.7) 85%, rgba(20,10,4,1) 100%)', pointerEvents: 'none' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(168,68,31,0.07) 0%, transparent 65%)', pointerEvents: 'none', animation: 'breathe 8s ease-in-out infinite' }} />
-
-                <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '0 clamp(24px,5vw,80px)', opacity: mounted ? 1 : 0, transition: 'opacity 1.6s 0.3s' }}>
-                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 10, color: T, letterSpacing: '0.7em', textTransform: 'uppercase', margin: '0 0 28px', opacity: 0.9 }}>personal diary</p>
-                    <h1 style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(52px,11vw,160px)', fontWeight: 400, color: P, margin: '0 0 10px', lineHeight: 0.88, letterSpacing: '-0.02em', opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(60px)', transition: 'all 1.8s 0.4s cubic-bezier(0.16,1,0.3,1)', textShadow: '0 4px 60px rgba(168,68,31,0.25)' }}>never meant</h1>
-                    <h1 style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(52px,11vw,160px)', fontWeight: 400, color: 'transparent', WebkitTextStroke: `1.5px rgba(237,228,208,0.55)`, margin: '0 0 44px', lineHeight: 0.88, letterSpacing: '-0.02em', opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(60px)', transition: 'all 1.8s 0.55s cubic-bezier(0.16,1,0.3,1)' }}>to be sent.</h1>
-                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 'clamp(14px,1.4vw,18px)', color: 'rgba(237,228,208,0.5)', maxWidth: 440, margin: '0 auto 44px', lineHeight: 1.9, opacity: mounted ? 1 : 0, transition: 'opacity 2s 1s' }}>The words you wrote but never gave anyone. Write them here. Lock them away. Keep them forever.</p>
-                    <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', opacity: mounted ? 1 : 0, transition: 'opacity 1.5s 1.3s' }}>
-                        <button onClick={() => navigate('/register')} style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 12, letterSpacing: '0.32em', textTransform: 'uppercase', color: INK, background: P, border: 'none', padding: '16px 48px', cursor: 'none', transition: 'all 0.35s' }}
-                            onMouseEnter={e => { e.currentTarget.style.background = T; e.currentTarget.style.color = P; on() }}
-                            onMouseLeave={e => { e.currentTarget.style.background = P; e.currentTarget.style.color = INK; off() }}>begin writing</button>
-                        <button onClick={() => navigate('/login')} style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 12, letterSpacing: '0.32em', textTransform: 'uppercase', color: P, background: 'transparent', border: '1px solid rgba(237,228,208,0.22)', padding: '16px 48px', cursor: 'none', transition: 'all 0.35s' }}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(237,228,208,0.6)'; on() }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(237,228,208,0.22)'; off() }}>open diary</button>
-                    </div>
-                </div>
-
-                <div style={{ position: 'absolute', bottom: 36, left: '50%', transform: 'translateX(-50%)', opacity: mounted ? 0.4 : 0, transition: 'opacity 1s 2s', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, animation: 'scrollBounce 2.8s ease-in-out infinite' }}>
-                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 8, color: P, letterSpacing: '0.7em', textTransform: 'uppercase', margin: 0 }}>scroll</p>
-                    <div style={{ width: 1, height: 40, background: `linear-gradient(180deg,${P},transparent)` }} />
-                </div>
-            </section>
-
-            <div style={{ background: INK2, borderTop: '1px solid rgba(237,228,208,0.05)', overflow: 'hidden', padding: '16px 0' }}>
-                <div style={{ display: 'flex', animation: 'marquee 24s linear infinite', whiteSpace: 'nowrap' }}>
-                    {[...mq, ...mq, ...mq].map((t, i) => (
-                        <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 24, paddingRight: 24 }}>
-                            <span style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 16, color: 'rgba(237,228,208,0.45)', letterSpacing: '0.08em' }}>{t}</span>
-                            <span style={{ color: T, fontSize: 10, opacity: 0.7 }}>✦</span>
-                        </span>
-                    ))}
-                </div>
-            </div>
-
-            <section ref={sr('about')} data-s="about" style={{ position: 'relative', overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '90vh' }}>
-                <div style={{ position: 'relative', overflow: 'hidden' }}>
-                    <img src={hands} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', filter: 'brightness(0.55) saturate(0.75) sepia(0.2)', display: 'block', transform: v('about') ? 'scale(1.0)' : 'scale(1.06)', transition: 'transform 2s ease' }} />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, transparent 50%, rgba(26,15,6,1) 100%)', pointerEvents: 'none' }} />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(26,15,6,0.4) 0%, transparent 30%, rgba(26,15,6,0.3) 100%)', pointerEvents: 'none' }} />
-                </div>
-                <div style={{ background: INK2, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'clamp(52px,7vw,110px) clamp(36px,5vw,80px)', position: 'relative' }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 60% at 80% 50%, rgba(168,68,31,0.06) 0%, transparent 60%)', pointerEvents: 'none' }} />
-                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 9, color: T, letterSpacing: '0.6em', textTransform: 'uppercase', margin: '0 0 22px', opacity: v('about') ? 1 : 0, transition: 'opacity 0.9s 0.1s' }}>what is drafts.</p>
-                    <h2 style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(34px,4.5vw,66px)', color: P, margin: '0 0 28px', fontWeight: 400, lineHeight: 1.05, opacity: v('about') ? 1 : 0, transform: v('about') ? 'translateY(0)' : 'translateY(50px)', transition: 'all 1.2s 0.2s cubic-bezier(0.16,1,0.3,1)' }}>The letters you wrote but never sent.</h2>
-                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 'clamp(13px,1.3vw,16px)', color: 'rgba(237,228,208,0.5)', lineHeight: 1.95, margin: '0 0 18px', opacity: v('about') ? 1 : 0, transition: 'opacity 1.1s 0.4s' }}>The rage you swallowed. The love you never said out loud. The 3am spirals nobody asked to read — but needed to be written.</p>
-                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 'clamp(13px,1.3vw,16px)', color: 'rgba(237,228,208,0.22)', lineHeight: 1.9, margin: '0 0 44px', opacity: v('about') ? 1 : 0, transition: 'opacity 1.1s 0.55s' }}>No audience. No algorithm. No send button.</p>
-                    <div style={{ display: 'flex', gap: 44, opacity: v('about') ? 1 : 0, transition: 'opacity 1s 0.7s' }}>
-                        {[{ n: '∞', l: 'pages' }, { n: '6', l: 'diaries' }, { n: '5', l: 'tools' }].map(({ n, l }) => (
-                            <div key={l}>
-                                <p style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(36px,4.5vw,58px)', color: T, margin: '0 0 5px', lineHeight: 1 }}>{n}</p>
-                                <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 9, color: 'rgba(237,228,208,0.3)', letterSpacing: '0.45em', textTransform: 'uppercase', margin: 0 }}>{l}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            <section ref={sr('script')} data-s="script" style={{ position: 'relative', overflow: 'hidden', minHeight: '70vh', display: 'flex', alignItems: 'center' }}>
-                <div style={{ position: 'absolute', inset: 0 }}>
-                    <img src={script} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', filter: 'brightness(0.28) saturate(0.5) sepia(0.4)', display: 'block' }} />
-                </div>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(26,15,6,0.85) 0%, rgba(26,15,6,0.4) 50%, rgba(26,15,6,0.85) 100%)', pointerEvents: 'none' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(26,15,6,0.6) 0%, transparent 40%, rgba(26,15,6,0.6) 100%)', pointerEvents: 'none' }} />
-                <div style={{ position: 'relative', zIndex: 2, padding: 'clamp(60px,9vw,130px) clamp(28px,6vw,90px)', maxWidth: 820, opacity: v('script') ? 1 : 0, transform: v('script') ? 'translateY(0)' : 'translateY(50px)', transition: 'all 1.3s 0.15s cubic-bezier(0.16,1,0.3,1)' }}>
-                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 9, color: T, letterSpacing: '0.6em', textTransform: 'uppercase', margin: '0 0 24px', opacity: 0.9 }}>the feeling</p>
-                    <h2 style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(38px,6vw,88px)', color: P, margin: '0 0 28px', fontWeight: 400, lineHeight: 0.95, textShadow: '0 2px 40px rgba(168,68,31,0.2)' }}>"Some things are<br />meant to be kept,<br />not sent."</h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                        <div style={{ width: 32, height: 1, background: T, opacity: 0.8 }} />
-                        <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(237,228,208,0.38)', margin: 0, letterSpacing: '0.2em' }}>never meant to be sent.</p>
-                    </div>
-                </div>
-            </section>
-
-            <section ref={sr('features')} data-s="features" style={{ background: INK, padding: 'clamp(80px,10vw,140px) clamp(28px,6vw,90px)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 50% at 80% 20%, rgba(168,68,31,0.07) 0%, transparent 60%)', pointerEvents: 'none' }} />
-                <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'clamp(44px,6vw,80px)', opacity: v('features') ? 1 : 0, transform: v('features') ? 'translateY(0)' : 'translateY(40px)', transition: 'all 1s 0.1s ease' }}>
-                        <h2 style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(34px,5.5vw,82px)', color: P, margin: 0, fontWeight: 400, lineHeight: 0.92 }}>Everything a diary<br />should be.</h2>
-                        <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 9, color: 'rgba(237,228,208,0.22)', letterSpacing: '0.55em', textTransform: 'uppercase', margin: 0, paddingBottom: 6 }}>features</p>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 1 }}>
-                        {[
-                            { n: '01', t: 'Draw freely.', b: 'Every page is a canvas. Pen, pencil, highlighter, eraser. Sketch, annotate, scribble it all out.', d: 0.15 },
-                            { n: '02', t: 'Lock it tight.', b: "Password-protect any diary. Not for anyone else's eyes. Not for tomorrow's regret.", d: 0.28 },
-                            { n: '03', t: 'Keep forever.', b: 'Every entry persists. Every thought archived. Nothing disappears unless you say so.', d: 0.4 },
-                        ].map(({ n, t, b, d }) => (
-                            <div key={n} style={{ padding: 'clamp(30px,4vw,54px)', background: 'rgba(237,228,208,0.025)', borderTop: '1px solid rgba(237,228,208,0.06)', position: 'relative', overflow: 'hidden', opacity: v('features') ? 1 : 0, transform: v('features') ? 'translateY(0)' : 'translateY(60px)', transition: `all 1.1s ${d}s cubic-bezier(0.16,1,0.3,1)`, cursor: 'none' }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(237,228,208,0.048)'; on() }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(237,228,208,0.025)'; off() }}>
-                                <div style={{ position: 'absolute', top: 0, left: 0, width: 2, height: '100%', background: T, opacity: 0.65 }} />
-                                <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 9, color: T, letterSpacing: '0.55em', textTransform: 'uppercase', margin: '0 0 18px', opacity: 0.85 }}>{n}</p>
-                                <h3 style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(26px,3vw,46px)', color: P, margin: '0 0 16px', fontWeight: 400, lineHeight: 1.05 }}>{t}</h3>
-                                <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 13, color: 'rgba(237,228,208,0.38)', lineHeight: 1.85, margin: 0 }}>{b}</p>
-                                <p style={{ position: 'absolute', bottom: -12, right: 12, fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(70px,10vw,130px)', color: 'transparent', WebkitTextStroke: '1px rgba(237,228,208,0.035)', margin: 0, lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>{n}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            <section ref={sr('eyes')} data-s="eyes" style={{ position: 'relative', overflow: 'hidden', minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                <div style={{ position: 'absolute', inset: 0 }}>
-                    <img src={eyes} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 40%', filter: 'brightness(0.32) saturate(0.6) sepia(0.35)', display: 'block', transform: v('eyes') ? 'scale(1.0)' : 'scale(1.08)', transition: 'transform 2.5s ease' }} />
-                </div>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(26,15,6,0.92) 0%, rgba(26,15,6,0.3) 60%, rgba(26,15,6,0.6) 100%)', pointerEvents: 'none' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(26,15,6,0.5) 0%, transparent 50%, rgba(26,15,6,0.5) 100%)', pointerEvents: 'none' }} />
-                <div style={{ position: 'relative', zIndex: 2, padding: 'clamp(60px,9vw,130px) clamp(28px,6vw,90px)', maxWidth: 600, marginRight: 0, opacity: v('eyes') ? 1 : 0, transform: v('eyes') ? 'translateX(0)' : 'translateX(60px)', transition: 'all 1.4s 0.2s cubic-bezier(0.16,1,0.3,1)', textAlign: 'right' }}>
-                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 9, color: T, letterSpacing: '0.6em', textTransform: 'uppercase', margin: '0 0 22px', opacity: 0.9 }}>your secret</p>
-                    <h2 style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(32px,4.5vw,66px)', color: P, margin: '0 0 22px', fontWeight: 400, lineHeight: 1.05 }}>The only eyes<br />that see this<br />are yours.</h2>
-                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 'clamp(13px,1.3vw,16px)', color: 'rgba(237,228,208,0.4)', lineHeight: 1.9, margin: 0 }}>Every diary can be locked with a password. No one else gets in. Not even us.</p>
-                </div>
-            </section>
-
-            <div style={{ background: INK2, borderTop: '1px solid rgba(237,228,208,0.04)', borderBottom: '1px solid rgba(237,228,208,0.04)', overflow: 'hidden', padding: '15px 0' }}>
-                <div style={{ display: 'flex', animation: 'marqueeRev 28s linear infinite', whiteSpace: 'nowrap' }}>
-                    {['memento mori', 'elegy', 'fever dreams', 'séance', 'the longest summer', 'haunt', 'full grain leather', 'aged vellum', 'scarlet morocco', 'midnight cloth', 'raw linen', 'bone paper'].flatMap((t, i, a) => [
-                        <span key={i} style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 10, color: 'rgba(237,228,208,0.28)', letterSpacing: '0.45em', textTransform: 'uppercase', marginRight: 22 }}>{t}</span>,
-                        <span key={i + a.length} style={{ color: T, fontSize: 9, opacity: 0.5, marginRight: 22 }}>◆</span>
-                    ])}
-                </div>
-            </div>
-
-            <section ref={sr('covers')} data-s="covers" style={{ background: INK2, padding: 'clamp(80px,10vw,140px) clamp(28px,6vw,90px)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 50% at 20% 60%, rgba(168,68,31,0.07) 0%, transparent 60%)', pointerEvents: 'none' }} />
-                <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-                    <div style={{ marginBottom: 'clamp(44px,6vw,80px)', opacity: v('covers') ? 1 : 0, transform: v('covers') ? 'translateY(0)' : 'translateY(40px)', transition: 'all 1s 0.1s ease' }}>
-                        <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 9, color: T, letterSpacing: '0.6em', textTransform: 'uppercase', margin: '0 0 18px' }}>choose your diary</p>
-                        <h2 style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(34px,5.5vw,82px)', color: P, margin: 0, fontWeight: 400, lineHeight: 0.92 }}>Six diaries.<br />Six worlds.</h2>
-                    </div>
-                    <div style={{ display: 'flex', gap: 12, opacity: v('covers') ? 1 : 0, transform: v('covers') ? 'translateY(0)' : 'translateY(40px)', transition: 'all 1.1s 0.3s ease' }}>
-                        {covers.map(({ name, sub, bg, spine, ac, tex }) => (
-                            <div key={name} style={{ flex: 1, aspectRatio: '2/3', background: bg, position: 'relative', overflow: 'hidden', transition: 'all 0.45s cubic-bezier(0.16,1,0.3,1)', cursor: 'none', borderRadius: 1 }}
-                                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-16px) scale(1.04)'; e.currentTarget.style.boxShadow = `0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px ${ac}`; on() }}
-                                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; off() }}>
-                                <div style={{ position: 'absolute', inset: 0, backgroundImage: tex, pointerEvents: 'none' }} />
-                                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 16, background: spine, pointerEvents: 'none', boxShadow: '2px 0 8px rgba(0,0,0,0.4)' }} />
-                                <div style={{ position: 'absolute', left: 16, top: 0, bottom: 0, width: 3, background: 'linear-gradient(90deg,rgba(255,255,255,0.06),transparent)', pointerEvents: 'none' }} />
-                                <div style={{ position: 'absolute', inset: '12px 12px 12px 22px', border: `1px solid ${ac}`, opacity: 0.14, pointerEvents: 'none' }} />
-                                <div style={{ position: 'absolute', inset: '16px 16px 16px 26px', border: `1px solid ${ac}`, opacity: 0.07, pointerEvents: 'none' }} />
-                                <div style={{ position: 'absolute', top: '50%', left: '55%', transform: 'translate(-50%,-55%)', textAlign: 'center', width: '75%' }}>
-                                    <p style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(11px,1.3vw,16px)', color: ac, margin: '0 0 6px', letterSpacing: 0.5, opacity: 0.85, lineHeight: 1.3 }}>{name}</p>
-                                    <div style={{ width: 20, height: 1, background: ac, opacity: 0.4, margin: '0 auto 6px' }} />
-                                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 7, color: ac, letterSpacing: '0.25em', textTransform: 'uppercase', opacity: 0.45, margin: 0 }}>{sub}</p>
-                                </div>
-                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: ac, opacity: 0.6 }} />
-                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,rgba(255,255,255,0.03) 0%,transparent 40%)', pointerEvents: 'none' }} />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            <section ref={sr('cta')} data-s="cta" style={{ position: 'relative', overflow: 'hidden', minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-                <div style={{ position: 'absolute', inset: 0 }}>
-                    <img src={temple} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 60%', filter: 'brightness(0.22) saturate(0.5) sepia(0.4)', display: 'block' }} />
-                </div>
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(26,15,6,0.85) 0%, rgba(26,15,6,0.5) 50%, rgba(26,15,6,0.9) 100%)', pointerEvents: 'none' }} />
-                <div style={{ position: 'absolute', top: '50%', left: '50%', width: '70vw', height: '70vw', borderRadius: '50%', border: '1px solid rgba(168,68,31,0.08)', transform: 'translate(-50%,-50%)', pointerEvents: 'none', animation: 'slowSpin 90s linear infinite' }} />
-                <div style={{ position: 'absolute', top: '50%', left: '50%', width: '46vw', height: '46vw', borderRadius: '50%', border: '1px solid rgba(168,68,31,0.06)', transform: 'translate(-50%,-50%)', pointerEvents: 'none', animation: 'slowSpin 60s linear infinite reverse' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 55% at 50% 50%, rgba(168,68,31,0.1) 0%, transparent 65%)', pointerEvents: 'none', animation: 'breathe 10s ease-in-out infinite' }} />
-                <div style={{ position: 'relative', zIndex: 2, maxWidth: 860, padding: '0 clamp(24px,5vw,80px)', opacity: v('cta') ? 1 : 0, transform: v('cta') ? 'translateY(0)' : 'translateY(50px)', transition: 'all 1.3s 0.15s cubic-bezier(0.16,1,0.3,1)' }}>
-                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 9, color: T, letterSpacing: '0.7em', textTransform: 'uppercase', margin: '0 0 28px', opacity: 0.9 }}>begin tonight</p>
-                    <h2 style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(48px,9vw,128px)', color: P, margin: '0 0 10px', fontWeight: 400, lineHeight: 0.88, textShadow: '0 4px 60px rgba(168,68,31,0.22)' }}>Write it down.</h2>
-                    <h2 style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 'clamp(48px,9vw,128px)', color: 'transparent', WebkitTextStroke: `1.8px ${T}`, margin: '0 0 44px', fontWeight: 400, lineHeight: 0.88 }}>Keep it forever.</h2>
-                    <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 'clamp(13px,1.4vw,18px)', color: 'rgba(237,228,208,0.4)', maxWidth: 460, margin: '0 auto 48px', lineHeight: 1.9 }}>Some things are meant to be written, not sent. This is that place.</p>
-                    <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-                        <button onClick={() => navigate('/register')} style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 12, letterSpacing: '0.32em', textTransform: 'uppercase', color: INK, background: P, border: 'none', padding: '17px 52px', cursor: 'none', transition: 'all 0.35s' }}
-                            onMouseEnter={e => { e.currentTarget.style.background = T; e.currentTarget.style.color = P; on() }}
-                            onMouseLeave={e => { e.currentTarget.style.background = P; e.currentTarget.style.color = INK; off() }}>begin writing</button>
-                        <button onClick={() => navigate('/login')} style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 12, letterSpacing: '0.32em', textTransform: 'uppercase', color: P, background: 'transparent', border: '1px solid rgba(237,228,208,0.22)', padding: '17px 52px', cursor: 'none', transition: 'all 0.35s' }}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(237,228,208,0.6)'; on() }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(237,228,208,0.22)'; off() }}>open diary</button>
-                    </div>
-                </div>
-            </section>
-
-            <footer style={{ background: INK, borderTop: '1px solid rgba(237,228,208,0.05)', padding: 'clamp(48px,6vw,82px) clamp(28px,6vw,90px)' }}>
-                <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-                    <div style={{ borderBottom: '1px solid rgba(237,228,208,0.06)', paddingBottom: 40, marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
-                        <p style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 48, color: P, margin: 0, opacity: 0.75 }}>drafts.</p>
-                        <div style={{ display: 'flex', gap: 10 }}>
-                            <button onClick={() => navigate('/register')} style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 11, letterSpacing: '0.3em', textTransform: 'uppercase', color: INK, background: P, border: 'none', padding: '13px 32px', cursor: 'none', transition: 'all 0.3s' }}
-                                onMouseEnter={e => { e.currentTarget.style.background = T; e.currentTarget.style.color = P; on() }}
-                                onMouseLeave={e => { e.currentTarget.style.background = P; e.currentTarget.style.color = INK; off() }}>begin writing</button>
-                            <button onClick={() => navigate('/login')} style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 11, letterSpacing: '0.3em', textTransform: 'uppercase', color: P, background: 'transparent', border: '1px solid rgba(237,228,208,0.2)', padding: '13px 32px', cursor: 'none', transition: 'all 0.3s' }}
-                                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(237,228,208,0.5)'; on() }}
-                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(237,228,208,0.2)'; off() }}>open diary</button>
-                        </div>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
-                        <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 9, color: 'rgba(237,228,208,0.15)', margin: 0, letterSpacing: '0.4em', textTransform: 'uppercase' }}>personal diary — 2025</p>
-                        <div style={{ textAlign: 'center' }}>
-                            <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontStyle: 'italic', fontSize: 11, color: 'rgba(237,228,208,0.24)', margin: '0 0 5px', letterSpacing: '0.15em' }}>designed & developed by</p>
-                            <p style={{ fontFamily: "'IM Fell English',Georgia,serif", fontStyle: 'italic', fontSize: 21, color: 'rgba(237,228,208,0.6)', margin: 0, letterSpacing: 1 }}>Mohini</p>
-                        </div>
-                        <p style={{ fontFamily: "'Palatino Linotype',Palatino,serif", fontSize: 9, color: 'rgba(237,228,208,0.1)', margin: 0, letterSpacing: '0.35em', textTransform: 'uppercase' }}>© {new Date().getFullYear()} drafts. all rights reserved</p>
-                    </div>
-                </div>
-            </footer>
-
+        <>
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap');
-                @keyframes marquee      { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-                @keyframes marqueeRev   { from{transform:translateX(-50%)} to{transform:translateX(0)} }
-                @keyframes slowSpin     { from{transform:translate(-50%,-50%) rotate(0deg)} to{transform:translate(-50%,-50%) rotate(360deg)} }
-                @keyframes breathe      { 0%,100%{opacity:0.7} 50%{opacity:1} }
-                @keyframes scrollBounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(10px)} }
-                * { box-sizing:border-box; }
-            `}</style>
-        </div>
+        @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+        html, body, #root { height: 100%; overflow: hidden; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        @keyframes loaderExit {
+          0%   { opacity: 1; transform: translateY(0) scale(1); }
+          100% { opacity: 0; transform: translateY(-20px) scale(.99); }
+        }
+        @keyframes counterTick {
+          from { transform: translateY(8px); opacity: 0; }
+          to   { transform: translateY(0);   opacity: 1; }
+        }
+        @keyframes wordRise {
+          0%   { transform: translateY(110%); opacity: 0; }
+          100% { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes imgScale {
+          from { transform: scale(1.06); opacity: 0; }
+          to   { transform: scale(1);    opacity: 1; }
+        }
+        @keyframes lineExpand {
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
+        }
+        @keyframes driftLeft {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        @keyframes barFill {
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
+        }
+        @keyframes loaderLineGrow {
+          from { width: 0; }
+          to   { width: 100%; }
+        }
+        @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes sheetUp   { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .btn-solid {
+          position: relative; overflow: hidden;
+          font-family: ${SANS}; font-size: 10px; font-weight: 500;
+          letter-spacing: .34em; text-transform: uppercase;
+          color: ${INK}; background: ${OFF}; border: none;
+          padding: 15px 42px; cursor: pointer;
+        }
+        .btn-solid::after {
+          content: ''; position: absolute; inset: 0; background: ${RUST};
+          transform: translateY(102%);
+          transition: transform .44s cubic-bezier(.16,1,.3,1);
+        }
+        .btn-solid:hover::after { transform: translateY(0); }
+        .btn-solid span { position: relative; z-index: 1; transition: color .44s; }
+        .btn-solid:hover span { color: ${OFF}; }
+
+        .btn-ghost {
+          position: relative; overflow: hidden;
+          font-family: ${SANS}; font-size: 10px; font-weight: 400;
+          letter-spacing: .34em; text-transform: uppercase;
+          color: ${DIM(.38)}; background: transparent;
+          border: 1px solid ${DIM(.14)}; padding: 15px 42px; cursor: pointer;
+          transition: border-color .3s;
+        }
+        .btn-ghost::after {
+          content: ''; position: absolute; inset: 0; background: ${DIM(.06)};
+          transform: translateX(-102%);
+          transition: transform .44s cubic-bezier(.16,1,.3,1);
+        }
+        .btn-ghost:hover::after { transform: translateX(0); }
+        .btn-ghost span { position: relative; z-index: 1; transition: color .3s; }
+        .btn-ghost:hover span { color: ${OFF}; }
+        .btn-ghost:hover { border-color: ${DIM(.32)}; }
+
+        .nav-about {
+          font-family: ${SANS}; font-size: 10px; font-weight: 400;
+          letter-spacing: .34em; text-transform: uppercase;
+          color: ${DIM(.3)}; background: none; border: none;
+          padding: 10px 18px; cursor: pointer; position: relative;
+          transition: color .25s;
+        }
+        .nav-about::after {
+          content: ''; position: absolute; bottom: 5px; left: 18px; right: 18px;
+          height: 1px; background: ${RUST};
+          transform: scaleX(0); transform-origin: left;
+          transition: transform .32s cubic-bezier(.16,1,.3,1);
+        }
+        .nav-about:hover { color: ${OFF}; }
+        .nav-about:hover::after { transform: scaleX(1); }
+
+        .stat-card { cursor: default; transition: transform .35s cubic-bezier(.16,1,.3,1); }
+        .stat-card:hover { transform: translateY(-5px); }
+
+        .feature-row { border-top: 1px solid ${DIM(.06)}; padding: 22px 0; transition: border-color .28s; }
+        .feature-row:hover { border-top-color: ${DIM(.2)}; }
+
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: ${DIM(.08)}; }
+      `}</style>
+
+            {/* ══════════════════════════════════
+          LOADER
+      ══════════════════════════════════ */}
+            {!loaderGone && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 1000,
+                    background: INK,
+                    display: 'flex', flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    padding: '44px 52px',
+                    animation: loaderDone ? 'loaderExit .85s .05s cubic-bezier(.7,0,.84,0) both' : 'none',
+                    pointerEvents: loaderDone ? 'none' : 'auto',
+                }}>
+
+                    <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 20, color: OFF, opacity: .7, letterSpacing: '-.01em' }}>drafts.</p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 0 }}>
+
+                        <p style={{ fontFamily: SANS, fontSize: 8, color: DIM(.18), letterSpacing: '.6em', textTransform: 'uppercase', fontWeight: 300, marginBottom: 28 }}>opening journal</p>
+
+                        <div style={{ position: 'relative', overflow: 'hidden' }}>
+                            <p
+                                key={pct}
+                                style={{
+                                    fontFamily: FONT,
+                                    fontStyle: 'italic',
+                                    fontWeight: 700,
+                                    fontSize: 'clamp(100px,22vw,300px)',
+                                    color: OFF,
+                                    lineHeight: 1,
+                                    letterSpacing: '-.03em',
+                                    opacity: .06,
+                                    userSelect: 'none',
+                                    animation: 'counterTick .12s cubic-bezier(.16,1,.3,1) both',
+                                }}
+                            >{pct}</p>
+                            <p
+                                key={`v-${pct}`}
+                                style={{
+                                    fontFamily: FONT,
+                                    fontStyle: 'italic',
+                                    fontWeight: 700,
+                                    fontSize: 'clamp(100px,22vw,300px)',
+                                    color: OFF,
+                                    lineHeight: 1,
+                                    letterSpacing: '-.03em',
+                                    position: 'absolute', inset: 0,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    animation: 'counterTick .12s cubic-bezier(.16,1,.3,1) both',
+                                }}
+                            >{pct}</p>
+                        </div>
+
+                        <div style={{ width: 'clamp(200px,28vw,380px)', marginTop: 32 }}>
+                            <div style={{ height: 1, background: DIM(.07), position: 'relative', overflow: 'hidden', marginBottom: 12 }}>
+                                <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: `${pct}%`, background: `linear-gradient(90deg, ${RUST}, ${DIM(.45)})`, transition: 'width .09s ease' }} />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                {['—', '25', '50', '75', '100'].map(t => (
+                                    <p key={t} style={{ fontFamily: SANS, fontSize: 7, color: DIM(.1), letterSpacing: '.22em', fontWeight: 300 }}>{t}</p>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                        <p style={{ fontFamily: SANS, fontSize: 8, color: DIM(.1), letterSpacing: '.38em', textTransform: 'uppercase', fontWeight: 300 }}>personal diary</p>
+                        <div style={{ textAlign: 'right' }}>
+                            <p style={{ fontFamily: SANS, fontSize: 7, color: DIM(.1), letterSpacing: '.26em', textTransform: 'uppercase', fontWeight: 300, marginBottom: 5 }}>designed & developed by</p>
+                            <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 18, color: DIM(.32) }}>Mohini</p>
+                        </div>
+                    </div>
+
+                </div>
+            )}
+
+            {/* ══════════════════════════════════
+          ABOUT OVERLAY
+      ══════════════════════════════════ */}
+            {aboutOpen && (
+                <div onClick={() => setAboutOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 900, background: 'rgba(6,5,10,.9)', backdropFilter: 'blur(24px)', display: 'flex', alignItems: 'flex-end', animation: 'overlayIn .4s cubic-bezier(.4,0,.2,1) both' }}>
+                    <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '84vh', background: '#0D0B10', borderTop: `1px solid ${DIM(.07)}`, padding: 'clamp(40px,5vw,64px) clamp(36px,6vw,80px)', overflowY: 'auto', animation: 'sheetUp .55s cubic-bezier(.16,1,.3,1) both' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 48 }}>
+                            <div>
+                                <p style={{ fontFamily: SANS, fontSize: 9, color: RUST, letterSpacing: '.62em', textTransform: 'uppercase', marginBottom: 12, fontWeight: 400 }}>what's inside</p>
+                                <h2 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(28px,4vw,52px)', color: OFF, lineHeight: .96 }}>Every feature,<br />built with intention.</h2>
+                            </div>
+                            <button onClick={() => setAboutOpen(false)} style={{ fontFamily: SANS, fontSize: 9, color: DIM(.28), background: 'none', border: `1px solid ${DIM(.09)}`, padding: '10px 20px', cursor: 'pointer', letterSpacing: '.28em', textTransform: 'uppercase', transition: 'color .2s, border-color .2s' }} onMouseEnter={e => { e.currentTarget.style.color = OFF; e.currentTarget.style.borderColor = DIM(.28) }} onMouseLeave={e => { e.currentTarget.style.color = DIM(.28); e.currentTarget.style.borderColor = DIM(.09) }}>close ×</button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px,1fr))', gap: '0 clamp(24px,5vw,68px)' }}>
+                            {ABOUT_FEATURES.map(({ n, t, b }) => (
+                                <div key={n} className="feature-row">
+                                    <div style={{ display: 'flex', gap: 14 }}>
+                                        <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 18, color: DIM(.08), lineHeight: 1, minWidth: 28, marginTop: 2 }}>{n}</p>
+                                        <div>
+                                            <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'clamp(13px,1.2vw,16px)', color: OFF, opacity: .88, marginBottom: 5, lineHeight: 1.15 }}>{t}</p>
+                                            <p style={{ fontFamily: SANS, fontSize: 11, color: DIM(.26), lineHeight: 1.88, fontWeight: 300 }}>{b}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ marginTop: 48, paddingTop: 24, borderTop: `1px solid ${DIM(.06)}` }}>
+                            <button className="btn-solid" style={{ fontSize: 9, padding: '12px 32px' }} onClick={() => { setAboutOpen(false); navigate('/register') }}><span>begin writing →</span></button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ══════════════════════════════════
+          MAIN
+      ══════════════════════════════════ */}
+            <div style={{ position: 'fixed', inset: 0, background: INK, overflow: 'hidden', opacity: loaderGone ? 1 : 0, transition: 'opacity .5s' }}>
+
+                <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 300, padding: '20px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', animation: loaderGone ? 'fadeIn .6s .1s both' : 'none' }}>
+                    <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 20, color: OFF, opacity: .88, cursor: 'default' }}>drafts.</p>
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <button className="nav-about" onClick={() => setAboutOpen(true)}>about</button>
+                        <button className="btn-solid" style={{ padding: '10px 26px', fontSize: 9 }} onClick={() => navigate('/register')}><span>begin →</span></button>
+                    </div>
+                </nav>
+
+                <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 300, height: 1, background: DIM(.05) }}>
+                    <div style={{ height: '100%', background: RUST, width: `${progress * 100}%`, transition: 'width .04s' }} />
+                </div>
+
+                <div style={{ position: 'fixed', bottom: 26, right: 48, zIndex: 300, display: 'flex', gap: 6 }}>
+                    {[0, 1].map(i => (
+                        <div key={i} style={{ height: 1, width: activePanel === i ? 24 : 6, background: activePanel === i ? RUST : DIM(.15), transition: 'width .5s cubic-bezier(.16,1,.3,1), background .3s' }} />
+                    ))}
+                </div>
+
+                <div style={{ position: 'fixed', bottom: 22, left: 48, zIndex: 300, display: 'flex', alignItems: 'center', gap: 10, opacity: loaderGone && progress < 0.05 ? 1 : 0, transition: 'opacity .6s' }}>
+                    <div style={{ width: 24, height: 1, background: DIM(.18), transformOrigin: 'left', animation: loaderGone ? 'lineExpand 1s 1.8s cubic-bezier(.16,1,.3,1) both' : 'none' }} />
+                    <p style={{ fontFamily: SANS, fontSize: 8, color: DIM(.18), letterSpacing: '.48em', textTransform: 'uppercase', fontWeight: 300, animation: loaderGone ? 'fadeIn .7s 1.9s both' : 'none' }}>scroll</p>
+                </div>
+
+                <div ref={trackRef} style={{ display: 'flex', height: '100vh', willChange: 'transform', position: 'absolute', top: 0, left: 0 }}>
+
+                    {/* ════ PANEL 1 ════ */}
+                    <div style={{ width: '100vw', height: '100vh', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+
+                        <img src={skullImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '55% 15%', display: 'block', filter: 'brightness(.36) contrast(1.1) saturate(0)', animation: loaderGone ? 'imgScale 2s .05s cubic-bezier(.4,0,.2,1) both' : 'none' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(6,5,10,.5) 0%, rgba(6,5,10,.06) 38%, rgba(6,5,10,.92) 100%)' }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(6,5,10,.78) 0%, rgba(6,5,10,.16) 55%, rgba(6,5,10,.06) 100%)' }} />
+                        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.03'/%3E%3C/svg%3E")`, backgroundSize: '380px 380px', mixBlendMode: 'overlay', pointerEvents: 'none' }} />
+
+                        <div style={{ position: 'absolute', inset: 0, zIndex: 2, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 'clamp(48px,7vw,88px) 48px 0' }}>
+
+                            <div style={{ overflow: 'hidden', marginBottom: 'clamp(12px,1.8vw,20px)' }}>
+                                <p style={{ fontFamily: SANS, fontSize: 9, color: RUST, letterSpacing: '.72em', textTransform: 'uppercase', fontWeight: 400, animation: loaderGone ? 'wordRise .9s .1s cubic-bezier(.16,1,.3,1) both' : 'none' }}>personal diary — est. 2025</p>
+                            </div>
+
+                            <div style={{ overflow: 'hidden', marginBottom: 8 }}>
+                                <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(52px,9.5vw,138px)', color: OFF, lineHeight: .88, letterSpacing: '-.018em', animation: loaderGone ? 'wordRise 1.3s .2s cubic-bezier(.16,1,.3,1) both' : 'none' }}>Never meant</h1>
+                            </div>
+                            <div style={{ overflow: 'hidden', marginBottom: 'clamp(18px,2.8vw,32px)' }}>
+                                <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 400, fontSize: 'clamp(52px,9.5vw,138px)', color: 'transparent', WebkitTextStroke: `1.5px ${DIM(.24)}`, lineHeight: .88, letterSpacing: '-.018em', paddingLeft: 'clamp(40px,6vw,80px)', animation: loaderGone ? 'wordRise 1.3s .34s cubic-bezier(.16,1,.3,1) both' : 'none' }}>to be sent.</h1>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', marginBottom: 'clamp(22px,3.2vw,36px)', animation: loaderGone ? 'fadeUp .9s .9s both' : 'none' }}>
+                                <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'clamp(13px,1.1vw,16px)', color: DIM(.26), lineHeight: 2.1, maxWidth: 260, fontWeight: 400 }}>
+                                    The words you wrote<br />but never gave anyone.<br />Keep them here. Keep them forever.
+                                </p>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <button className="btn-solid" onClick={() => navigate('/register')}><span>begin writing</span></button>
+                                    <button className="btn-ghost" onClick={() => navigate('/login')}><span>open diary</span></button>
+                                </div>
+                            </div>
+
+                            <div style={{ overflow: 'hidden', animation: loaderGone ? 'fadeIn .8s 1.1s both' : 'none' }}>
+                                <div style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'driftLeft 22s linear infinite' }}>
+                                    {Array.from({ length: 8 }).map((_, i) => (
+                                        <span key={i} style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(88px,17vw,232px)', color: 'transparent', WebkitTextStroke: `1px ${DIM(.065)}`, lineHeight: .82, letterSpacing: '-.018em', paddingRight: '0.3em', userSelect: 'none' }}>drafts.</span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 200, background: `linear-gradient(90deg,transparent,${INK})`, pointerEvents: 'none', zIndex: 3 }} />
+                    </div>
+
+                    {/* ════ PANEL 2 ════ */}
+                    <div style={{ width: '100vw', height: '100vh', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+
+                        {/* full-bleed image — left ~55%, fades into black on all sides */}
+                        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+                            <img
+                                src={handImg} alt=""
+                                style={{ position: 'absolute', top: 0, right: 0, width: '58%', height: '100%', objectFit: 'cover', objectPosition: 'center center', display: 'block', filter: 'brightness(.42) contrast(1.08) saturate(0)' }}
+                            />
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(6,5,10,.7) 0%, rgba(6,5,10,.1) 22%, rgba(6,5,10,.1) 72%, rgba(6,5,10,.85) 100%)' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to right, ${INK} 28%, rgba(6,5,10,.82) 42%, rgba(6,5,10,.35) 62%, rgba(6,5,10,.1) 100%)` }} />
+                        </div>
+
+                        {/* text layer — sits on top of image */}
+                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 'clamp(80px,10vw,116px) 48px 0 48px', height: '100%', overflow: 'hidden' }}>
+
+                            <div style={{ position: 'relative', zIndex: 1 }}>
+                                <p style={{ fontFamily: SANS, fontSize: 9, color: RUST, letterSpacing: '.7em', textTransform: 'uppercase', fontWeight: 400, marginBottom: 'clamp(20px,3vw,30px)' }}>your diary</p>
+
+                                {[
+                                    { text: 'Your words.', weight: 700, stroke: false, strokeOpacity: 1 },
+                                    { text: 'Your handwriting.', weight: 400, stroke: true, strokeOpacity: .32 },
+                                    { text: 'Your secret.', weight: 400, stroke: true, strokeOpacity: .12 },
+                                ].map(({ text, weight, stroke, strokeOpacity }) => (
+                                    <div key={text} style={{ marginBottom: 'clamp(4px,0.6vw,8px)', padding: '2px 0' }}>
+                                        <h2 style={{
+                                            fontFamily: FONT,
+                                            fontStyle: 'italic',
+                                            fontWeight: weight,
+                                            fontSize: 'clamp(34px,5.8vw,82px)',
+                                            color: stroke ? 'transparent' : OFF,
+                                            WebkitTextStroke: stroke ? `1.2px ${DIM(strokeOpacity)}` : 'none',
+                                            lineHeight: .95,
+                                            letterSpacing: '-.018em',
+                                            display: 'block',
+                                        }}>{text}</h2>
+                                    </div>
+                                ))}
+
+                                <div style={{ display: 'flex', gap: 40, marginTop: 'clamp(22px,3.2vw,38px)', paddingTop: 18, borderTop: `1px solid ${DIM(.07)}` }}>
+                                    {[{ n: '∞', l: 'pages' }, { n: '6', l: 'covers' }, { n: '0', l: 'ads' }, { n: '8', l: 'features' }].map(({ n, l }) => (
+                                        <div key={l} className="stat-card">
+                                            <p style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(17px,2.2vw,28px)', color: RUST, lineHeight: 1 }}>{n}</p>
+                                            <p style={{ fontFamily: SANS, fontSize: 7, color: DIM(.12), letterSpacing: '.44em', textTransform: 'uppercase', marginTop: 5, fontWeight: 300 }}>{l}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div style={{ position: 'relative', zIndex: 1 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14, paddingTop: 18, borderTop: `1px solid ${DIM(.06)}` }}>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <button className="btn-solid" style={{ padding: '12px 28px', fontSize: 9 }} onClick={() => navigate('/register')}><span>begin writing</span></button>
+                                        <button className="btn-ghost" style={{ padding: '12px 28px', fontSize: 9 }} onClick={() => navigate('/login')}><span>open diary</span></button>
+                                    </div>
+                                    <div style={{ textAlign: 'center' }}>
+                                        <p style={{ fontFamily: SANS, fontSize: 7, color: DIM(.22), letterSpacing: '.24em', textTransform: 'uppercase', fontWeight: 300, marginBottom: 4 }}>designed & developed by</p>
+                                        <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 17, color: DIM(.55) }}>Mohini</p>
+                                    </div>
+                                    <p style={{ fontFamily: SANS, fontSize: 7, color: DIM(.18), letterSpacing: '.32em', textTransform: 'uppercase', fontWeight: 300 }}>© {new Date().getFullYear()} drafts.</p>
+                                </div>
+
+                                <div style={{ overflow: 'hidden' }}>
+                                    <div style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'driftLeft 18s linear infinite' }}>
+                                        {Array.from({ length: 6 }).map((_, i) => (
+                                            <span key={i} style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(86px,16.5vw,214px)', color: 'transparent', WebkitTextStroke: `1px ${DIM(.05)}`, lineHeight: .8, letterSpacing: '-.018em', paddingRight: '0.3em', userSelect: 'none' }}>drafts.</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </>
     )
 }
