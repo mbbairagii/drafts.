@@ -68,7 +68,8 @@ export default function PageCanvas({ page, tool, toolColor, toolSize, fontFamily
         const ctx = canvas.getContext('2d')
         if (!ctx) return
         const pos = getPos(e, canvas)
-        ctx.lineJoin = 'round'; ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+        ctx.lineCap = 'round'
 
         if (tool === 'eraser') {
             ctx.globalCompositeOperation = 'destination-out'
@@ -154,7 +155,7 @@ export default function PageCanvas({ page, tool, toolColor, toolSize, fontFamily
 
     return (
         <div
-            style={{ position: 'relative', width: '100%', height: '100%', background: theme.bg, cursor: 'none', overflow: 'hidden' }}
+            style={{ position: 'relative', width: '100%', height: '100%', background: theme.bg, cursor: 'none', overflow: 'hidden', isolation: 'isolate' }}
             onClick={handleClick}
             onMouseDown={() => setSelectedId(null)}
         >
@@ -191,7 +192,7 @@ export default function PageCanvas({ page, tool, toolColor, toolSize, fontFamily
                 ref={canvasRef}
                 width={500}
                 height={700}
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', touchAction: 'none' }}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', touchAction: 'none', willChange: 'contents' }}
                 onMouseDown={startDraw}
                 onMouseMove={draw}
                 onMouseUp={endDraw}

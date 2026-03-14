@@ -13,7 +13,7 @@ export default function CreateDiaryModal({ onClose, onCreated }: Props) {
     const [name, setName] = useState('')
     const [password, setPassword] = useState('')
     const [confirm, setConfirm] = useState('')
-    const [cover, setCover] = useState<CoverId>('obsidian')
+    const [cover, setCover] = useState<CoverId>('void')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const { createDiary } = useDiary()
