@@ -29,7 +29,7 @@ export async function updateDiary(req: AuthRequest, res: Response): Promise<void
     const diary = await Diary.findOneAndUpdate(
         { _id: req.params.id, userId: req.userId },
         { name, cover, lastModified: new Date() },
-        { new: true }
+        { returnDocument: 'after' }
     );
     if (!diary) { res.status(404).json({ message: 'Not found' }); return; }
     res.status(200).json({ diary });

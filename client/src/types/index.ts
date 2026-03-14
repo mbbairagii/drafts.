@@ -1,7 +1,7 @@
 export type ToolId = 'pen' | 'pencil' | 'highlighter' | 'eraser' | 'text'
 export type PanelId = 'stickers' | 'themes' | 'cover' | 'pages'
-export type CoverId = 'obsidian' | 'crimson' | 'void' | 'aurora' | 'absinthe' | 'ghost'
-export type ThemeId = 'aged' | 'void' | 'grid' | 'dot' | 'blood' | 'ink'
+export type CoverId = 'void' | 'scarab' | 'versailles' | 'crimson-seal' | 'nevermore' | 'relic'
+export type ThemeId = 'aged' | 'void' | 'grid' | 'dot' | 'blood' | 'ink' | 'cream' | 'blank' | 'dark' | 'forest' | 'rose'
 
 export interface User {
     _id: string
@@ -70,9 +70,11 @@ export interface Sticker {
 export interface CoverStyle {
     id: CoverId
     name: string
+    bgImage: string
     bg: string
     accent: string
     glow: string
+    customizable: boolean
 }
 
 export interface PageTheme {

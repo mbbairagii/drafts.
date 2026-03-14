@@ -11,6 +11,9 @@ import CustomCursor from '../components/ui/CustomCursor'
 import ParticleDust from '../components/ui/ParticleDust'
 import NoiseOverlay from '../components/ui/NoiseOverlay'
 
+const INK = '#06050A'
+const DIM = (a: number) => `rgba(237,232,223,${a})`
+
 export default function DiaryScreen() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
@@ -21,6 +24,7 @@ export default function DiaryScreen() {
     const [currentPage, setCurrentPage] = useState(0)
     const [flipAnim, setFlipAnim] = useState<'next' | 'prev' | null>(null)
     const [loading, setLoading] = useState(true)
+    const [isOpen, setIsOpen] = useState(false)   // diary starts closed
 
     const [activeTool, setActiveTool] = useState<ToolId>('pen')
     const [toolColor, setToolColor] = useState('#1a0f00')
@@ -48,9 +52,7 @@ export default function DiaryScreen() {
 
     const debouncedSave = useCallback((diaryId: string, pageId: string, data: Partial<DiaryPage>) => {
         if (saveTimeout.current) clearTimeout(saveTimeout.current)
-        saveTimeout.current = setTimeout(() => {
-            updatePage(diaryId, pageId, data)
-        }, 800)
+        saveTimeout.current = setTimeout(() => updatePage(diaryId, pageId, data), 800)
     }, [])
 
     const handleUpdatePage = useCallback((updated: DiaryPage) => {
@@ -64,11 +66,13 @@ export default function DiaryScreen() {
     }, [id, debouncedSave])
 
     const handleFlip = (dir: 'next' | 'prev') => {
+        if (flipAnim) return                              // ← add this guard
         const next = dir === 'next' ? currentPage + 1 : currentPage - 1
         if (next < 0 || next >= pages.length) return
         setFlipAnim(dir)
         setTimeout(() => { setCurrentPage(next); setFlipAnim(null) }, 500)
     }
+
 
     const handleGoToPage = (i: number) => {
         if (i === currentPage) return
@@ -76,18 +80,21 @@ export default function DiaryScreen() {
         setTimeout(() => { setCurrentPage(i); setFlipAnim(null) }, 500)
     }
 
+    // Stickers can be added even when diary is closed — they land on the current page
     const handleAddSticker = (s: Sticker) => {
         const page = pages[currentPage]
         if (!page) return
-        const newSticker = {
-            id: generateId(),
-            emoji: s.emoji,
-            x: 60 + Math.random() * 280,
-            y: 80 + Math.random() * 380,
-            size: 34 + Math.random() * 12,
-            rotation: (Math.random() - 0.5) * 24,
-        }
-        handleUpdatePage({ ...page, stickers: [...(page.stickers || []), newSticker] })
+        handleUpdatePage({
+            ...page,
+            stickers: [...(page.stickers || []), {
+                id: generateId(),
+                emoji: s.emoji,
+                x: 60 + Math.random() * 280,
+                y: 80 + Math.random() * 380,
+                size: 34 + Math.random() * 12,
+                rotation: (Math.random() - 0.5) * 24,
+            }],
+        })
     }
 
     const handleChangeTheme = async (themeId: ThemeId) => {
@@ -100,8 +107,7 @@ export default function DiaryScreen() {
 
     const handleChangeCover = async (coverId: CoverId) => {
         if (!diary || !id) return
-        const updated = { ...diary, cover: coverId }
-        setDiary(updated)
+        setDiary({ ...diary, cover: coverId })
         await updateDiary(id, { cover: coverId })
     }
 
@@ -133,38 +139,68 @@ export default function DiaryScreen() {
         reader.onload = ev => {
             const page = pages[currentPage]
             if (!page) return
-            const img = {
-                id: generateId(),
-                src: ev.target?.result as string,
-                x: 40 + Math.random() * 60,
-                y: 60 + Math.random() * 60,
-                width: 190,
-                height: 150,
-            }
-            handleUpdatePage({ ...page, images: [...(page.images || []), img] })
+            handleUpdatePage({
+                ...page,
+                images: [...(page.images || []), {
+                    id: generateId(),
+                    src: ev.target?.result as string,
+                    x: 40 + Math.random() * 60,
+                    y: 60 + Math.random() * 60,
+                    width: 190,
+                    height: 150,
+                }],
+            })
         }
         reader.readAsDataURL(file)
         e.target.value = ''
     }
 
+    // ── Loading ─────────────────────────────────────────────────────
     if (loading) return (
-        <div style={{ height: '100vh', background: '#0C0C0C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p style={{ fontFamily: "'IM Fell English',serif", fontSize: 22, color: '#2a2a2a', letterSpacing: 3 }}>drafts.</p>
+        <div style={{ height: '100vh', background: INK, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital@1&display=swap');
+                @keyframes ds-breathe { 0%,100%{opacity:0.18} 50%{opacity:0.55} }
+            `}</style>
+            <p style={{ fontFamily: "'Libre Baskerville',Georgia,serif", fontStyle: 'italic', fontSize: 30, color: DIM(0.4), margin: 0, letterSpacing: '-0.02em', animation: 'ds-breathe 2.2s ease-in-out infinite' }}>
+                drafts.
+            </p>
         </div>
     )
 
     if (!diary) return null
 
     return (
-        <div style={{ height: '100vh', background: '#0C0C0C', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ height: '100vh', background: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+
+                @keyframes ds-panel-left  { from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:translateX(0)} }
+                @keyframes ds-panel-right { from{opacity:0;transform:translateX(16px)}  to{opacity:1;transform:translateX(0)} }
+                @keyframes ds-topbar      { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+
+                .ds-panel-left  { animation: ds-panel-left  0.55s cubic-bezier(0.2,1,0.3,1) both; }
+                .ds-panel-right { animation: ds-panel-right 0.55s 0.07s cubic-bezier(0.2,1,0.3,1) both; }
+                .ds-topbar      { animation: ds-topbar      0.5s  0.05s cubic-bezier(0.2,1,0.3,1) both; }
+
+                * { box-sizing:border-box; }
+                ::-webkit-scrollbar { width:3px; }
+                ::-webkit-scrollbar-track { background:transparent; }
+                ::-webkit-scrollbar-thumb { background:rgba(200,160,90,0.15); border-radius:2px; }
+            `}</style>
+
             <ParticleDust />
             <NoiseOverlay />
             <CustomCursor tool={activeTool} color={toolColor} />
 
-            <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 50% 50%,${cover.glow} 0%,transparent 65%)`, pointerEvents: 'none', opacity: 0.25 }} />
+            {/* Cover-tinted ambient glow */}
+            <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 70% 60% at 50% 50%, ${cover.glow} 0%, transparent 65%)`, opacity: 0.22, pointerEvents: 'none', zIndex: 0 }} />
 
+            {/* Layout */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 18, width: '100%', maxWidth: 1300, padding: '0 18px', height: '100vh', position: 'relative', zIndex: 10 }}>
-                <div style={{ width: 196, height: 'calc(100vh - 32px)', paddingTop: 56, flexShrink: 0, overflowY: 'auto' }}>
+
+                {/* ── Left panel ── */}
+                <div className="ds-panel-left" style={{ width: 196, height: 'calc(100vh - 32px)', paddingTop: 56, flexShrink: 0, overflowY: 'auto' }}>
                     <LeftPanel
                         activeTool={activeTool}
                         setActiveTool={setActiveTool}
@@ -180,36 +216,47 @@ export default function DiaryScreen() {
                     />
                 </div>
 
+                {/* ── Centre ── */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 560, marginBottom: 14 }}>
-                        <button onClick={() => navigate('/')}
-                            style={{ padding: '7px 16px', borderRadius: 18, border: `1px solid ${cover.accent}25`, background: 'transparent', color: '#6B6B6B', cursor: 'pointer', fontSize: 12, fontFamily: 'Georgia,serif', transition: 'all 0.2s' }}
-                            onMouseEnter={e => { (e.currentTarget).style.borderColor = cover.accent + '60'; (e.currentTarget).style.color = cover.accent }}
-                            onMouseLeave={e => { (e.currentTarget).style.borderColor = cover.accent + '25'; (e.currentTarget).style.color = '#6B6B6B' }}>
-                            ← drafts.
-                        </button>
-                        <h2 style={{ fontFamily: "'IM Fell English',Georgia,serif", fontSize: 20, color: '#F5F2ED', margin: 0, textShadow: `0 0 18px ${cover.glow}` }}>{diary.name}</h2>
-                        <span style={{ color: '#2a2a2a', fontSize: 11, fontFamily: 'monospace' }}>{currentPage + 1}/{pages.length}</span>
+
+                    {/* Top bar */}
+                    <div className="ds-topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 560, marginBottom: 14 }}>
+                        <button
+                            onClick={() => navigate('/')}
+                            style={{ padding: '7px 16px', borderRadius: 18, border: `1px solid ${cover.accent}25`, background: 'transparent', color: DIM(0.35), cursor: 'pointer', fontSize: 11, fontFamily: "'DM Sans',sans-serif", letterSpacing: '0.1em', transition: 'all 0.2s', outline: 'none' }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = cover.accent + '60'; e.currentTarget.style.color = cover.accent }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = cover.accent + '25'; e.currentTarget.style.color = DIM(0.35) }}
+                        >← drafts.</button>
+
+                        <h2 style={{ fontFamily: "'Libre Baskerville',Georgia,serif", fontStyle: 'italic', fontSize: 20, color: DIM(0.85), margin: 0, letterSpacing: '-0.01em', textShadow: `0 0 24px ${cover.glow}` }}>
+                            {diary.name}
+                        </h2>
+
+                        <span style={{ color: DIM(0.2), fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.15em' }}>
+                            {currentPage + 1}/{pages.length}
+                        </span>
                     </div>
 
-                    <div className="anim-diary-open">
-                        <DiaryBook
-                            diary={diary}
-                            page={pages[currentPage] || null}
-                            currentPage={currentPage}
-                            totalPages={pages.length}
-                            tool={activeTool}
-                            toolColor={toolColor}
-                            toolSize={toolSize}
-                            fontFamily={activeFont.family}
-                            flipAnim={flipAnim}
-                            onUpdatePage={handleUpdatePage}
-                            onFlip={handleFlip}
-                        />
-                    </div>
+                    {/* Book */}
+                    <DiaryBook
+                        diary={diary}
+                        page={pages[currentPage] || null}
+                        currentPage={currentPage}
+                        totalPages={pages.length}
+                        tool={activeTool}
+                        toolColor={toolColor}
+                        toolSize={toolSize}
+                        fontFamily={activeFont.family}
+                        flipAnim={flipAnim}
+                        onUpdatePage={handleUpdatePage}
+                        onFlip={handleFlip}
+                        isOpen={isOpen}
+                        onOpen={() => setIsOpen(true)}
+                    />
                 </div>
 
-                <div style={{ width: 196, height: 'calc(100vh - 32px)', paddingTop: 56, flexShrink: 0, overflowY: 'auto' }}>
+                {/* ── Right panel ── */}
+                <div className="ds-panel-right" style={{ width: 196, height: 'calc(100vh - 32px)', paddingTop: 56, flexShrink: 0, overflowY: 'auto' }}>
                     <RightPanel
                         activePanel={rightPanel}
                         setActivePanel={setRightPanel}

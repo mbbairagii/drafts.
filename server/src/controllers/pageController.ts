@@ -32,7 +32,7 @@ export async function updatePage(req: AuthRequest, res: Response): Promise<void>
     const page = await Page.findOneAndUpdate(
         { _id: oid(req.params.pageId), diaryId },
         { ...req.body },
-        { new: true }
+        { returnDocument: 'after' }
     );
     if (!page) { res.status(404).json({ message: 'Page not found' }); return; }
     await Diary.findByIdAndUpdate(diaryId, { lastModified: new Date() });
