@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import Footer from '../components/ui/Footer'
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('')
@@ -9,6 +10,7 @@ export default function LoginScreen() {
     const [loading, setLoading] = useState(false)
     const [focused, setFocused] = useState<string | null>(null)
     const [mounted, setMounted] = useState(false)
+    const [showPass, setShowPass] = useState(false)
     const [inkLines, setInkLines] = useState<{ id: number; x: number; y: number; angle: number; len: number }[]>([])
     const inkRef = useRef(0)
     const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -95,12 +97,12 @@ export default function LoginScreen() {
     const rightWords = ['written.', 'locked.', 'kept.', 'secret.', 'safe.', 'yours.', 'forever.']
 
     return (
-        <div style={{ height: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', cursor: 'none', paddingBottom: '14vh' }}>
+        <div style={{ height: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', cursor: 'none', paddingBottom: '14vh' }}>
 
             <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }} />
 
             {inkLines.map(l => (
-                <div key={l.id} style={{ position: 'fixed', left: l.x, top: l.y, width: l.len, height: 1, background: 'linear-gradient(90deg, rgba(200,160,90,0.85), transparent)', transform: `rotate(${l.angle}deg)`, transformOrigin: '0 50%', pointerEvents: 'none', zIndex: 99998, animation: 'inkFade 1s ease forwards' }} />
+                <div key={l.id} style={{ position: 'fixed', left: l.x, top: l.y, width: l.len, height: 1, background: 'linear-gradient(90deg, rgba(200,160,90,0.85), transparent)', transform: `rotate(${l.angle}deg)`, transformOrigin: '0 50%', pointerEvents: 'none', zIndex: 99998, animationName: 'inkFade', animationDuration: '1s', animationTimingFunction: 'ease', animationFillMode: 'forwards' }} />
             ))}
 
             <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, opacity: 0.06, pointerEvents: 'none', zIndex: 1 }} />
@@ -111,31 +113,36 @@ export default function LoginScreen() {
                 <p style={{ fontFamily: "Georgia, serif", fontSize: '37vw', fontWeight: 400, color: 'transparent', WebkitTextStroke: '1px rgba(200,160,90,0.06)', backgroundClip: 'text', WebkitBackgroundClip: 'text', backgroundImage: 'linear-gradient(180deg, rgba(200,160,90,0.22) 0%, rgba(200,160,90,0.08) 50%, rgba(200,160,90,0.03) 100%)', margin: 0, padding: 0, lineHeight: 0.82, whiteSpace: 'nowrap', letterSpacing: '-0.02em' }}>drafts.</p>
             </div>
 
+            {/* Left words */}
             <div style={{ position: 'absolute', left: '4%', top: 0, bottom: 0, width: '22vw', zIndex: 2, pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0, marginTop: '-12vh' }}>
                 {leftWords.map((w, i) => (
-                    <p key={i} style={{ fontFamily: "'IM Fell English', serif", fontStyle: 'italic', fontSize: 'clamp(15px, 1.8vw, 24px)', color: `rgba(200,160,90,${0.15 + i * 0.04})`, margin: '0 0 8px', letterSpacing: 1, transform: `translateX(${i * 10}px)`, whiteSpace: 'nowrap', opacity: mounted ? 1 : 0, transition: `opacity 1.2s ${0.5 + i * 0.13}s ease`, animation: mounted ? `driftL ${12 + i * 1.8}s ease-in-out infinite` : 'none', animationDelay: `${i * 0.4}s` }}>{w}</p>
+                    <p key={i} style={{ fontFamily: "'IM Fell English', serif", fontStyle: 'italic', fontSize: 'clamp(15px, 1.8vw, 24px)', color: `rgba(200,160,90,${0.15 + i * 0.04})`, margin: '0 0 8px', letterSpacing: 1, transform: `translateX(${i * 10}px)`, whiteSpace: 'nowrap', opacity: mounted ? 1 : 0, transition: `opacity 1.2s ${0.5 + i * 0.13}s ease`, animationName: mounted ? 'driftL' : 'none', animationDuration: `${12 + i * 1.8}s`, animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite', animationDelay: `${i * 0.4}s` }}>{w}</p>
                 ))}
             </div>
 
+            {/* Right words */}
             <div style={{ position: 'absolute', right: '4%', top: 0, bottom: 0, width: '22vw', zIndex: 2, pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', gap: 0, marginTop: '-12vh' }}>
                 {rightWords.map((w, i) => (
-                    <p key={i} style={{ fontFamily: "'IM Fell English', serif", fontStyle: 'italic', fontSize: 'clamp(15px, 1.8vw, 24px)', color: `rgba(200,160,90,${0.15 + i * 0.04})`, margin: '0 0 8px', letterSpacing: 1, transform: `translateX(-${i * 10}px)`, whiteSpace: 'nowrap', opacity: mounted ? 1 : 0, transition: `opacity 1.2s ${0.5 + i * 0.13}s ease`, animation: mounted ? `driftR ${12 + i * 1.8}s ease-in-out infinite` : 'none', animationDelay: `${i * 0.4}s` }}>{w}</p>
+                    <p key={i} style={{ fontFamily: "'IM Fell English', serif", fontStyle: 'italic', fontSize: 'clamp(15px, 1.8vw, 24px)', color: `rgba(200,160,90,${0.15 + i * 0.04})`, margin: '0 0 8px', letterSpacing: 1, transform: `translateX(-${i * 10}px)`, whiteSpace: 'nowrap', opacity: mounted ? 1 : 0, transition: `opacity 1.2s ${0.5 + i * 0.13}s ease`, animationName: mounted ? 'driftR' : 'none', animationDuration: `${12 + i * 1.8}s`, animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite', animationDelay: `${i * 0.4}s` }}>{w}</p>
                 ))}
             </div>
 
+            {/* Left glyphs */}
             <div style={{ position: 'absolute', left: '2%', top: '12%', zIndex: 2, pointerEvents: 'none', opacity: mounted ? 1 : 0, transition: 'opacity 2s 1s ease' }}>
                 {['✦', '·', '✧', '—', '·', '✦'].map((g, i) => (
-                    <div key={i} style={{ fontFamily: 'serif', fontSize: `${10 + i * 3}px`, color: `rgba(200,160,90,${0.12 + i * 0.035})`, position: 'absolute', left: `${i * 22}px`, top: `${i * 38}px`, animation: `floatGlyph ${5 + i * 1.2}s ease-in-out infinite`, animationDelay: `${i * 0.6}s` }}>{g}</div>
+                    <div key={i} style={{ fontFamily: 'serif', fontSize: `${10 + i * 3}px`, color: `rgba(200,160,90,${0.12 + i * 0.035})`, position: 'absolute', left: `${i * 22}px`, top: `${i * 38}px`, animationName: 'floatGlyph', animationDuration: `${5 + i * 1.2}s`, animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite', animationDelay: `${i * 0.6}s` }}>{g}</div>
                 ))}
             </div>
+
+            {/* Right glyphs */}
             <div style={{ position: 'absolute', right: '2%', top: '15%', zIndex: 2, pointerEvents: 'none', opacity: mounted ? 1 : 0, transition: 'opacity 2s 1.2s ease' }}>
                 {['·', '✦', '—', '✧', '·', '✦'].map((g, i) => (
-                    <div key={i} style={{ fontFamily: 'serif', fontSize: `${10 + i * 3}px`, color: `rgba(200,160,90,${0.12 + i * 0.035})`, position: 'absolute', right: `${i * 22}px`, top: `${i * 38}px`, animation: `floatGlyph ${5 + i * 1.2}s ease-in-out infinite`, animationDelay: `${i * 0.8}s` }}>{g}</div>
+                    <div key={i} style={{ fontFamily: 'serif', fontSize: `${10 + i * 3}px`, color: `rgba(200,160,90,${0.12 + i * 0.035})`, position: 'absolute', right: `${i * 22}px`, top: `${i * 38}px`, animationName: 'floatGlyph', animationDuration: `${5 + i * 1.2}s`, animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite', animationDelay: `${i * 0.8}s` }}>{g}</div>
                 ))}
             </div>
 
             <div style={{ position: 'absolute', right: '3%', bottom: '32%', zIndex: 2, pointerEvents: 'none', opacity: mounted ? 1 : 0, transition: 'opacity 2s 1.9s ease', textAlign: 'right' }}>
-                <p style={{ fontFamily: "'IM Fell English', serif", fontStyle: 'italic', fontSize: 11, color: 'rgba(200,160,90,0.2)', letterSpacing: '0.3em', margin: 0, animation: 'breatheText 11s ease-in-out infinite', animationDelay: '2s' }}>"but i wrote it."</p>
+                <p style={{ fontFamily: "'IM Fell English', serif", fontStyle: 'italic', fontSize: 11, color: 'rgba(200,160,90,0.2)', letterSpacing: '0.3em', margin: 0, animationName: 'breatheText', animationDuration: '11s', animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite', animationDelay: '2s' }}>"but i wrote it."</p>
             </div>
 
             <div style={{ position: 'relative', zIndex: 10, width: 520, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.97)', transition: 'all 1.1s 0.2s cubic-bezier(0.16,1,0.3,1)', marginTop: '-10vh' }}>
@@ -158,14 +165,16 @@ export default function LoginScreen() {
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                         <LoginField label="Email" type="email" value={email} onChange={setEmail} placeholder="you@somewhere.com" focused={focused === 'email'} onFocus={() => setFocused('email')} onBlur={() => setFocused(null)} />
-                        <LoginField label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" focused={focused === 'password'} onFocus={() => setFocused('password')} onBlur={() => setFocused(null)} onEnter={handleSubmit} />
+                        <LoginField label="Password" type={showPass ? 'text' : 'password'} value={password} onChange={setPassword} placeholder="••••••••" focused={focused === 'password'} onFocus={() => setFocused('password')} onBlur={() => setFocused(null)} onEnter={handleSubmit}
+                            showToggle show={showPass} onToggle={() => setShowPass(v => !v)} />
                     </div>
 
                     {error && (
-                        <p style={{ fontFamily: "'Palatino Linotype', serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(220,80,80,0.95)', marginTop: 16, letterSpacing: '0.15em', animation: 'shakeErr 0.4s ease forwards' }}>{error}</p>
+                        <p style={{ fontFamily: "'Palatino Linotype', serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(220,80,80,0.95)', marginTop: 16, letterSpacing: '0.15em', animationName: 'shakeErr', animationDuration: '0.4s', animationTimingFunction: 'ease', animationFillMode: 'forwards' }}>{error}</p>
                     )}
 
-                    <button onClick={handleSubmit} disabled={loading} style={{ width: '100%', marginTop: 30, padding: '18px', border: '1px solid rgba(200,160,90,0.45)', borderRadius: 3, background: loading ? 'rgba(200,160,90,0.1)' : 'linear-gradient(135deg, rgba(200,160,90,0.3), rgba(175,125,55,0.35))', color: loading ? 'rgba(200,160,90,0.45)' : 'rgba(200,160,90,1)', fontSize: 13, cursor: loading ? 'not-allowed' : 'none', fontFamily: "'Palatino Linotype', serif", fontStyle: 'italic', letterSpacing: '0.3em', textTransform: 'uppercase', transition: 'all 0.35s ease', boxShadow: loading ? 'none' : '0 0 40px rgba(200,160,90,0.15), inset 0 1px 0 rgba(200,160,90,0.2)' }}
+                    <button onClick={handleSubmit} disabled={loading}
+                        style={{ width: '100%', marginTop: 30, padding: '18px', border: '1px solid rgba(200,160,90,0.45)', borderRadius: 3, background: loading ? 'rgba(200,160,90,0.1)' : 'linear-gradient(135deg, rgba(200,160,90,0.3), rgba(175,125,55,0.35))', color: loading ? 'rgba(200,160,90,0.45)' : 'rgba(200,160,90,1)', fontSize: 13, cursor: loading ? 'not-allowed' : 'none', fontFamily: "'Palatino Linotype', serif", fontStyle: 'italic', letterSpacing: '0.3em', textTransform: 'uppercase', transition: 'all 0.35s ease', boxShadow: loading ? 'none' : '0 0 40px rgba(200,160,90,0.15), inset 0 1px 0 rgba(200,160,90,0.2)' }}
                         onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(200,160,90,0.4), rgba(175,125,55,0.45))'; e.currentTarget.style.borderColor = 'rgba(200,160,90,0.7)'; e.currentTarget.style.boxShadow = '0 0 60px rgba(200,160,90,0.25), inset 0 1px 0 rgba(200,160,90,0.25)'; e.currentTarget.style.letterSpacing = '0.38em' } }}
                         onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(200,160,90,0.3), rgba(175,125,55,0.35))'; e.currentTarget.style.borderColor = 'rgba(200,160,90,0.45)'; e.currentTarget.style.boxShadow = '0 0 40px rgba(200,160,90,0.15), inset 0 1px 0 rgba(200,160,90,0.2)'; e.currentTarget.style.letterSpacing = '0.3em' } }}>
                         {loading ? 'opening...' : 'open my drafts'}
@@ -184,40 +193,17 @@ export default function LoginScreen() {
                 </div>
             </div>
 
+            <Footer />
+
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap');
-                @keyframes inkFade {
-                    0%   { opacity: 0.85; }
-                    100% { opacity: 0; transform: scaleX(1.5); }
-                }
-                @keyframes shakeErr {
-                    0%,100% { transform: translateX(0); }
-                    20%     { transform: translateX(-6px); }
-                    40%     { transform: translateX(6px); }
-                    60%     { transform: translateX(-4px); }
-                    80%     { transform: translateX(4px); }
-                }
-                @keyframes fieldGlow {
-                    0%,100% { opacity: 0.6; }
-                    50%     { opacity: 1; }
-                }
-                @keyframes driftL {
-                    0%,100% { transform: translateX(var(--tx,0px)) translateY(0px); }
-                    50%     { transform: translateX(var(--tx,0px)) translateY(-6px); }
-                }
-                @keyframes driftR {
-                    0%,100% { transform: translateX(var(--tx,0px)) translateY(0px); }
-                    50%     { transform: translateX(var(--tx,0px)) translateY(-6px); }
-                }
-                @keyframes floatGlyph {
-                    0%,100% { transform: translateY(0px) rotate(0deg); opacity: 0.8; }
-                    33%     { transform: translateY(-8px) rotate(5deg); opacity: 1; }
-                    66%     { transform: translateY(-4px) rotate(-3deg); opacity: 0.9; }
-                }
-                @keyframes breatheText {
-                    0%,100% { opacity: 0.8; letter-spacing: 0.3em; }
-                    50%     { opacity: 1; letter-spacing: 0.45em; }
-                }
+                @keyframes inkFade { 0% { opacity: 0.85; } 100% { opacity: 0; transform: scaleX(1.5); } }
+                @keyframes shakeErr { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+                @keyframes fieldGlow { 0%,100%{opacity:0.6} 50%{opacity:1} }
+                @keyframes driftL { 0%,100%{transform:translateX(var(--tx,0px)) translateY(0px)} 50%{transform:translateX(var(--tx,0px)) translateY(-6px)} }
+                @keyframes driftR { 0%,100%{transform:translateX(var(--tx,0px)) translateY(0px)} 50%{transform:translateX(var(--tx,0px)) translateY(-6px)} }
+                @keyframes floatGlyph { 0%,100%{transform:translateY(0px) rotate(0deg);opacity:0.8} 33%{transform:translateY(-8px) rotate(5deg);opacity:1} 66%{transform:translateY(-4px) rotate(-3deg);opacity:0.9} }
+                @keyframes breatheText { 0%,100%{opacity:0.8;letter-spacing:0.3em} 50%{opacity:1;letter-spacing:0.45em} }
                 * { box-sizing: border-box; }
                 input::placeholder { color: rgba(200,160,90,0.4); font-style: italic; }
                 input:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px #0a0a0a inset !important; -webkit-text-fill-color: rgba(240,228,200,0.95) !important; }
@@ -226,10 +212,11 @@ export default function LoginScreen() {
     )
 }
 
-function LoginField({ label, type, value, onChange, placeholder, focused, onFocus, onBlur, onEnter }: {
+function LoginField({ label, type, value, onChange, placeholder, focused, onFocus, onBlur, onEnter, showToggle, show, onToggle }: {
     label: string; type: string; value: string
     onChange: (v: string) => void; placeholder: string
     focused: boolean; onFocus: () => void; onBlur: () => void; onEnter?: () => void
+    showToggle?: boolean; show?: boolean; onToggle?: () => void
 }) {
     return (
         <div>
@@ -244,10 +231,16 @@ function LoginField({ label, type, value, onChange, placeholder, focused, onFocu
                     onKeyDown={e => e.key === 'Enter' && onEnter?.()}
                     onFocus={onFocus} onBlur={onBlur}
                     placeholder={placeholder}
-                    style={{ width: '100%', padding: '15px 20px', background: focused ? 'rgba(200,160,90,0.08)' : 'rgba(255,255,255,0.05)', border: `1px solid ${focused ? 'rgba(200,160,90,0.55)' : 'rgba(200,160,90,0.25)'}`, borderRadius: 3, color: 'rgba(240,228,200,0.95)', fontSize: 14, outline: 'none', fontFamily: "'Palatino Linotype', Palatino, serif", transition: 'all 0.3s ease', boxShadow: focused ? '0 0 28px rgba(200,160,90,0.15), inset 0 1px 0 rgba(200,160,90,0.1)' : 'none', letterSpacing: type === 'password' ? 4 : 0.3 }}
+                    style={{ width: '100%', padding: showToggle ? '15px 48px 15px 20px' : '15px 20px', background: focused ? 'rgba(200,160,90,0.08)' : 'rgba(255,255,255,0.05)', border: `1px solid ${focused ? 'rgba(200,160,90,0.55)' : 'rgba(200,160,90,0.25)'}`, borderRadius: 3, color: 'rgba(240,228,200,0.95)', fontSize: 14, outline: 'none', fontFamily: "'Palatino Linotype', Palatino, serif", transition: 'all 0.3s ease', boxShadow: focused ? '0 0 28px rgba(200,160,90,0.15), inset 0 1px 0 rgba(200,160,90,0.1)' : 'none', letterSpacing: type === 'password' ? 4 : 0.3 }}
                 />
+                {showToggle && (
+                    <button onClick={onToggle} tabIndex={-1}
+                        style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'rgba(200,160,90,0.45)', fontSize: 15, lineHeight: 1, display: 'flex', alignItems: 'center' }}>
+                        {show ? '🙈' : '👁'}
+                    </button>
+                )}
                 {focused && (
-                    <div style={{ position: 'absolute', bottom: 0, left: '8%', right: '8%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,160,90,0.65), transparent)', animation: 'fieldGlow 2s ease-in-out infinite' }} />
+                    <div style={{ position: 'absolute', bottom: 0, left: '8%', right: '8%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(200,160,90,0.65), transparent)', animationName: 'fieldGlow', animationDuration: '2s', animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite' }} />
                 )}
             </div>
         </div>
