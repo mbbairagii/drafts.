@@ -1,11 +1,12 @@
-import { Router } from 'express';
-import { getPages, addPage, updatePage, deletePage } from '../controllers/pageController';
-import auth from '../middleware/auth';
+import { Router } from 'express'
+import { getPages, addPage, updatePage, deletePage } from '../controllers/pageController'
+import auth from '../middleware/auth'
 
-const router = Router();
-router.use(auth);
-router.get('/:diaryId/pages', getPages);
-router.post('/:diaryId/pages', addPage);
-router.patch('/:diaryId/pages/:pageId', updatePage);
-router.delete('/:diaryId/pages/:pageId', deletePage);
-export default router;
+const router = Router({ mergeParams: true })
+
+router.get('/', auth, getPages)
+router.post('/', auth, addPage)
+router.put('/:pageId', auth, updatePage)
+router.delete('/:pageId', auth, deletePage)
+
+export default router

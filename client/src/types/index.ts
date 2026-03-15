@@ -1,6 +1,6 @@
 export type ToolId = 'pen' | 'pencil' | 'highlighter' | 'eraser' | 'text'
 export type PanelId = 'stickers' | 'themes' | 'cover' | 'pages'
-export type CoverId = 'void' | 'scarab' | 'versailles' | 'crimson-seal' | 'nevermore' | 'relic'
+export type CoverId = 'midnight' | 'crimson' | 'forest' | 'ivory' | 'slate' | 'rose'
 export type ThemeId = 'aged' | 'void' | 'grid' | 'dot' | 'blood' | 'ink' | 'cream' | 'blank' | 'dark' | 'forest' | 'rose'
 
 export interface User {
@@ -12,13 +12,12 @@ export interface User {
 
 export interface Diary {
     _id: string
-    userId: string
     name: string
-    cover: CoverId
-    passwordHash?: string
-    pageCount: number
-    createdAt: string
-    lastModified: string
+    cover: string
+    coverStickers?: StickerElement[]
+    passwordHash?: string | null
+    createdAt?: string
+    updatedAt?: string
 }
 
 export interface TextElement {
@@ -33,7 +32,8 @@ export interface TextElement {
 
 export interface StickerElement {
     id: string
-    emoji: string
+    emoji?: string
+    src?: string
     x: number
     y: number
     size: number
@@ -65,16 +65,6 @@ export interface Sticker {
     id: number
     emoji: string
     label: string
-}
-
-export interface CoverStyle {
-    id: CoverId
-    name: string
-    bgImage: string
-    bg: string
-    accent: string
-    glow: string
-    customizable: boolean
 }
 
 export interface PageTheme {

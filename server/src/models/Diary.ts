@@ -1,14 +1,23 @@
-import { Schema, model, Types } from 'mongoose';
-import type { IDiary } from '../types';
+import mongoose, { Schema, Document } from 'mongoose'
+
+export interface IDiary extends Document {
+    userId: mongoose.Types.ObjectId
+    name: string
+    cover: string
+    passwordHash?: string
+    coverStickers?: any[]
+    createdAt: Date
+    updatedAt: Date
+}
 
 const DiarySchema = new Schema<IDiary>({
-    name: { type: String, required: true, trim: true },
-    passwordHash: { type: String, default: null },
-    cover: { type: String, required: true, default: 'obsidian' },
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    pageCount: { type: Number, default: 1 },
-    createdAt: { type: Date, default: Date.now },
-    lastModified: { type: Date, default: Date.now },
-});
+    name: { type: String, required: true },
+    cover: { type: String, default: 'midnight' },
+    passwordHash: { type: String },
+    coverStickers: { type: Array, default: [] },
+    createdAt: { type: Date, default: () => new Date() },
+    updatedAt: { type: Date, default: () => new Date() },
+})
 
-export default model<IDiary>('Diary', DiarySchema);
+export default mongoose.model<IDiary>('Diary', DiarySchema)

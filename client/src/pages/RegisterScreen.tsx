@@ -2,14 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import stampImg from '../assets/11.png'
+import Footer from '../components/ui/Footer'
 
-const BG = '#0a0a0a'
-const OFF = '#F0EEF5'
-const SIL = '#8A94A8'
-const SIL2 = '#B8C4D8'
-const GOLD = '#8B6F3E'
-const GOLD2 = '#C4A882'
-const DIM = (a: number) => `rgba(184,196,216,${a})`
+const BG = '#000'
 const FONT = "'IM Fell English', serif"
 const SANS = "'Palatino Linotype', serif"
 
@@ -53,10 +48,13 @@ export default function RegisterScreen() {
     const [email, setEmail] = useState('')
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const [confirm, setConfirm] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const [mounted, setMounted] = useState(false)
     const [focused, setFocused] = useState<string | null>(null)
+    const [showPass, setShowPass] = useState(false)
+    const [showConfirm, setShowConfirm] = useState(false)
     const { register } = useAuth()
     const navigate = useNavigate()
 
@@ -66,8 +64,9 @@ export default function RegisterScreen() {
     }, [])
 
     const handleSubmit = async () => {
-        if (!email || !username || !password) { setError('Fill in all fields.'); return }
+        if (!email || !username || !password || !confirm) { setError('Fill in all fields.'); return }
         if (password.length < 6) { setError('Password must be at least 6 characters.'); return }
+        if (password !== confirm) { setError('Passwords do not match.'); return }
         setError('')
         setLoading(true)
         try {
@@ -86,7 +85,7 @@ export default function RegisterScreen() {
             <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 55% at 50% 40%, rgba(138,148,168,.16) 0%, transparent 65%), radial-gradient(ellipse 50% 40% at 8% 70%, rgba(184,196,216,.12) 0%, transparent 55%), radial-gradient(ellipse 45% 38% at 90% 18%, rgba(138,148,168,.10) 0%, transparent 55%)', pointerEvents: 'none', zIndex: 1 }} />
 
             {SPARKS.map((s, i) => (
-                <div key={i} style={{ position: 'fixed', pointerEvents: 'none', zIndex: 2, top: s.top, left: s.left, width: s.size * 5, height: s.size * 5, animation: `sparkle ${s.dur}s ${s.delay}s ease-in-out infinite` }}>
+                <div key={i} style={{ position: 'fixed', pointerEvents: 'none', zIndex: 2, top: s.top, left: s.left, width: s.size * 5, height: s.size * 5, animationName: 'sparkle', animationDuration: `${s.dur}s`, animationDelay: `${s.delay}s`, animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite' }}>
                     <div style={{ position: 'absolute', width: '100%', height: 1, top: '50%', left: 0, transform: 'translateY(-50%)', background: 'rgba(220,228,240,.95)', borderRadius: 2 }} />
                     <div style={{ position: 'absolute', height: '100%', width: 1, left: '50%', top: 0, transform: 'translateX(-50%)', background: 'rgba(220,228,240,.95)', borderRadius: 2 }} />
                 </div>
@@ -104,22 +103,24 @@ export default function RegisterScreen() {
                 { top: '55%', left: '36%', dur: 8, delay: 3.0 },
                 { top: '30%', left: '62%', dur: 9.5, delay: 0.6 },
             ].map((p, i) => (
-                <div key={i} style={{ position: 'fixed', pointerEvents: 'none', zIndex: 2, top: p.top, left: p.left, fontSize: 16, color: 'rgba(184,196,216,.45)', animation: `plusFloat ${p.dur}s ${p.delay}s ease-in-out infinite`, fontWeight: 300, lineHeight: 1 }}>+</div>
+                <div key={i} style={{ position: 'fixed', pointerEvents: 'none', zIndex: 2, top: p.top, left: p.left, fontSize: 16, color: 'rgba(184,196,216,.45)', animationName: 'plusFloat', animationDuration: `${p.dur}s`, animationDelay: `${p.delay}s`, animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite', fontWeight: 300, lineHeight: 1 }}>+</div>
             ))}
 
-            <div style={{ position: 'fixed', top: 28, right: 44, width: 180, height: 180, zIndex: 20, pointerEvents: 'none', opacity: mounted ? 1 : 0, animation: mounted ? 'stampDrop .9s .2s cubic-bezier(.16,1,.3,1) both' : 'none', filter: 'drop-shadow(0 12px 32px rgba(0,0,0,.8)) drop-shadow(0 3px 8px rgba(138,148,168,.3))' }}>
+            <div style={{ position: 'fixed', top: 28, right: 44, width: 180, height: 180, zIndex: 20, pointerEvents: 'none', opacity: mounted ? 1 : 0, animationName: mounted ? 'stampDrop' : 'none', animationDuration: '.9s', animationDelay: '.2s', animationTimingFunction: 'cubic-bezier(.16,1,.3,1)', animationFillMode: 'both', filter: 'drop-shadow(0 12px 32px rgba(0,0,0,.8)) drop-shadow(0 3px 8px rgba(138,148,168,.3))' }}>
                 <img src={stampImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
             </div>
 
+            {/* Left words */}
             <div style={{ position: 'absolute', left: '4%', top: 0, bottom: 0, width: '22vw', zIndex: 2, pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 0, marginTop: '-12vh' }}>
                 {LEFT_WORDS.map((w, i) => (
-                    <p key={i} style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'clamp(15px,1.8vw,24px)', color: `rgba(184,196,216,${0.15 + i * 0.04})`, margin: '0 0 8px', letterSpacing: 1, transform: `translateX(${i * 10}px)`, whiteSpace: 'nowrap', opacity: mounted ? 1 : 0, transition: `opacity 1.2s ${0.5 + i * 0.13}s ease`, animation: mounted ? `driftL ${12 + i * 1.8}s ease-in-out infinite` : 'none', animationDelay: `${i * 0.4}s` }}>{w}</p>
+                    <p key={i} style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'clamp(15px,1.8vw,24px)', color: `rgba(184,196,216,${0.15 + i * 0.04})`, margin: '0 0 8px', letterSpacing: 1, transform: `translateX(${i * 10}px)`, whiteSpace: 'nowrap', opacity: mounted ? 1 : 0, transition: `opacity 1.2s ${0.5 + i * 0.13}s ease`, animationName: mounted ? 'driftL' : 'none', animationDuration: `${12 + i * 1.8}s`, animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite', animationDelay: `${i * 0.4}s` }}>{w}</p>
                 ))}
             </div>
 
+            {/* Right words */}
             <div style={{ position: 'absolute', right: '4%', top: 0, bottom: 0, width: '22vw', zIndex: 2, pointerEvents: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', gap: 0, marginTop: '-12vh' }}>
                 {RIGHT_WORDS.map((w, i) => (
-                    <p key={i} style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'clamp(15px,1.8vw,24px)', color: `rgba(184,196,216,${0.15 + i * 0.04})`, margin: '0 0 8px', letterSpacing: 1, transform: `translateX(-${i * 10}px)`, whiteSpace: 'nowrap', opacity: mounted ? 1 : 0, transition: `opacity 1.2s ${0.5 + i * 0.13}s ease`, animation: mounted ? `driftR ${12 + i * 1.8}s ease-in-out infinite` : 'none', animationDelay: `${i * 0.4}s` }}>{w}</p>
+                    <p key={i} style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'clamp(15px,1.8vw,24px)', color: `rgba(184,196,216,${0.15 + i * 0.04})`, margin: '0 0 8px', letterSpacing: 1, transform: `translateX(-${i * 10}px)`, whiteSpace: 'nowrap', opacity: mounted ? 1 : 0, transition: `opacity 1.2s ${0.5 + i * 0.13}s ease`, animationName: mounted ? 'driftR' : 'none', animationDuration: `${12 + i * 1.8}s`, animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite', animationDelay: `${i * 0.4}s` }}>{w}</p>
                 ))}
             </div>
 
@@ -146,20 +147,20 @@ export default function RegisterScreen() {
                     <p style={{ fontFamily: SANS, fontSize: 9, color: 'rgba(184,196,216,0.65)', letterSpacing: '0.6em', textTransform: 'uppercase', margin: '0 0 28px' }}>create your archive</p>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                        {([
-                            { key: 'username', label: 'Username', type: 'text', val: username, set: setUsername, ph: 'what do we call you' },
-                            { key: 'email', label: 'Email', type: 'email', val: email, set: setEmail, ph: 'you@somewhere.com' },
-                            { key: 'password', label: 'Password', type: 'password', val: password, set: setPassword, ph: 'make it unguessable' },
-                        ] as const).map(({ key, label, type, val, set, ph }) => (
-                            <RegField key={key} label={label} type={type} value={val} onChange={set} placeholder={ph} focused={focused === key} onFocus={() => setFocused(key)} onBlur={() => setFocused(null)} onEnter={key === 'password' ? handleSubmit : undefined} />
-                        ))}
+                        <RegField label="Username" type="text" value={username} onChange={setUsername} placeholder="what do we call you" focused={focused === 'username'} onFocus={() => setFocused('username')} onBlur={() => setFocused(null)} />
+                        <RegField label="Email" type="email" value={email} onChange={setEmail} placeholder="you@somewhere.com" focused={focused === 'email'} onFocus={() => setFocused('email')} onBlur={() => setFocused(null)} />
+                        <RegField label="Password" type={showPass ? 'text' : 'password'} value={password} onChange={setPassword} placeholder="make it unguessable" focused={focused === 'password'} onFocus={() => setFocused('password')} onBlur={() => setFocused(null)}
+                            showToggle show={showPass} onToggle={() => setShowPass(v => !v)} />
+                        <RegField label="Confirm Password" type={showConfirm ? 'text' : 'password'} value={confirm} onChange={setConfirm} placeholder="repeat your password" focused={focused === 'confirm'} onFocus={() => setFocused('confirm')} onBlur={() => setFocused(null)} onEnter={handleSubmit}
+                            showToggle show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
                     </div>
 
                     {error && (
-                        <p style={{ fontFamily: SANS, fontStyle: 'italic', fontSize: 12, color: 'rgba(220,80,80,1)', marginTop: 16, letterSpacing: '0.15em', animation: 'shakeErr 0.4s ease' }}>{error}</p>
+                        <p style={{ fontFamily: SANS, fontStyle: 'italic', fontSize: 12, color: 'rgba(220,80,80,1)', marginTop: 16, letterSpacing: '0.15em', animationName: 'shakeErr', animationDuration: '0.4s', animationTimingFunction: 'ease' }}>{error}</p>
                     )}
 
-                    <button onClick={handleSubmit} disabled={loading} style={{ width: '100%', marginTop: 30, padding: '18px', border: '1px solid rgba(139,111,62,0.5)', borderRadius: 3, background: loading ? 'rgba(139,111,62,0.1)' : 'linear-gradient(135deg, rgba(139,111,62,0.35), rgba(120,90,35,0.4))', color: loading ? 'rgba(196,168,130,0.5)' : 'rgba(220,196,150,1)', fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: SANS, fontStyle: 'italic', letterSpacing: '0.3em', textTransform: 'uppercase', transition: 'all 0.35s ease', boxShadow: loading ? 'none' : '0 0 40px rgba(139,111,62,0.15), inset 0 1px 0 rgba(139,111,62,0.2)' }}
+                    <button onClick={handleSubmit} disabled={loading}
+                        style={{ width: '100%', marginTop: 30, padding: '18px', border: '1px solid rgba(139,111,62,0.5)', borderRadius: 3, background: loading ? 'rgba(139,111,62,0.1)' : 'linear-gradient(135deg, rgba(139,111,62,0.35), rgba(120,90,35,0.4))', color: loading ? 'rgba(196,168,130,0.5)' : 'rgba(220,196,150,1)', fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: SANS, fontStyle: 'italic', letterSpacing: '0.3em', textTransform: 'uppercase', transition: 'all 0.35s ease', boxShadow: loading ? 'none' : '0 0 40px rgba(139,111,62,0.15), inset 0 1px 0 rgba(139,111,62,0.2)' }}
                         onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(139,111,62,0.45), rgba(120,90,35,0.5))'; e.currentTarget.style.borderColor = 'rgba(139,111,62,0.75)'; e.currentTarget.style.boxShadow = '0 0 60px rgba(139,111,62,0.25), inset 0 1px 0 rgba(139,111,62,0.25)'; e.currentTarget.style.letterSpacing = '0.38em' } }}
                         onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(139,111,62,0.35), rgba(120,90,35,0.4))'; e.currentTarget.style.borderColor = 'rgba(139,111,62,0.5)'; e.currentTarget.style.boxShadow = '0 0 40px rgba(139,111,62,0.15), inset 0 1px 0 rgba(139,111,62,0.2)'; e.currentTarget.style.letterSpacing = '0.3em' } }}>
                         {loading ? 'creating your archive...' : 'begin writing'}
@@ -178,41 +179,17 @@ export default function RegisterScreen() {
                 </div>
             </div>
 
+            <Footer />
+
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap');
-                @keyframes shakeErr {
-                    0%,100% { transform: translateX(0); }
-                    20%     { transform: translateX(-6px); }
-                    40%     { transform: translateX(6px); }
-                    60%     { transform: translateX(-4px); }
-                    80%     { transform: translateX(4px); }
-                }
-                @keyframes fieldGlow {
-                    0%,100% { opacity: 0.6; }
-                    50%     { opacity: 1; }
-                }
-                @keyframes driftL {
-                    0%,100% { transform: translateX(var(--tx,0px)) translateY(0px); }
-                    50%     { transform: translateX(var(--tx,0px)) translateY(-6px); }
-                }
-                @keyframes driftR {
-                    0%,100% { transform: translateX(var(--tx,0px)) translateY(0px); }
-                    50%     { transform: translateX(var(--tx,0px)) translateY(-6px); }
-                }
-                @keyframes sparkle {
-                    0%,100% { opacity: 0; transform: scale(0) rotate(0deg); }
-                    30%,70% { opacity: 1; transform: scale(1) rotate(180deg); }
-                }
-                @keyframes plusFloat {
-                    0%,100% { transform: translateY(0px) rotate(0deg); opacity: .35; }
-                    50%     { transform: translateY(-9px) rotate(15deg); opacity: .6; }
-                }
-                @keyframes stampDrop {
-                    0%   { opacity:0; transform:translateY(-60px) scale(1.1); filter:blur(4px); }
-                    65%  { opacity:1; transform:translateY(6px) scale(1.01); filter:blur(0); }
-                    82%  { transform:translateY(-3px) scale(.99); }
-                    100% { opacity:1; transform:translateY(0) scale(1); }
-                }
+                @keyframes shakeErr { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+                @keyframes fieldGlow { 0%,100%{opacity:0.6} 50%{opacity:1} }
+                @keyframes driftL { 0%,100%{transform:translateX(var(--tx,0px)) translateY(0px)} 50%{transform:translateX(var(--tx,0px)) translateY(-6px)} }
+                @keyframes driftR { 0%,100%{transform:translateX(var(--tx,0px)) translateY(0px)} 50%{transform:translateX(var(--tx,0px)) translateY(-6px)} }
+                @keyframes sparkle { 0%,100%{opacity:0;transform:scale(0) rotate(0deg)} 30%,70%{opacity:1;transform:scale(1) rotate(180deg)} }
+                @keyframes plusFloat { 0%,100%{transform:translateY(0px) rotate(0deg);opacity:.35} 50%{transform:translateY(-9px) rotate(15deg);opacity:.6} }
+                @keyframes stampDrop { 0%{opacity:0;transform:translateY(-60px) scale(1.1);filter:blur(4px)} 65%{opacity:1;transform:translateY(6px) scale(1.01);filter:blur(0)} 82%{transform:translateY(-3px) scale(.99)} 100%{opacity:1;transform:translateY(0) scale(1)} }
                 * { box-sizing: border-box; }
                 input::placeholder { color: rgba(184,196,216,0.45); font-style: italic; }
                 input:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px ${BG} inset !important; -webkit-text-fill-color: rgba(240,236,248,0.95) !important; }
@@ -221,10 +198,11 @@ export default function RegisterScreen() {
     )
 }
 
-function RegField({ label, type, value, onChange, placeholder, focused, onFocus, onBlur, onEnter }: {
+function RegField({ label, type, value, onChange, placeholder, focused, onFocus, onBlur, onEnter, showToggle, show, onToggle }: {
     label: string; type: string; value: string
     onChange: (v: string) => void; placeholder: string
     focused: boolean; onFocus: () => void; onBlur: () => void; onEnter?: () => void
+    showToggle?: boolean; show?: boolean; onToggle?: () => void
 }) {
     return (
         <div>
@@ -239,10 +217,16 @@ function RegField({ label, type, value, onChange, placeholder, focused, onFocus,
                     onKeyDown={e => e.key === 'Enter' && onEnter?.()}
                     onFocus={onFocus} onBlur={onBlur}
                     placeholder={placeholder}
-                    style={{ width: '100%', padding: '15px 20px', background: focused ? 'rgba(184,196,216,0.08)' : 'rgba(255,255,255,0.05)', border: `1px solid ${focused ? 'rgba(184,196,216,0.55)' : 'rgba(184,196,216,0.25)'}`, borderRadius: 3, color: 'rgba(240,236,248,0.98)', fontSize: 14, outline: 'none', fontFamily: "'Palatino Linotype', Palatino, serif", transition: 'all 0.3s ease', boxShadow: focused ? '0 0 28px rgba(184,196,216,0.15), inset 0 1px 0 rgba(184,196,216,0.1)' : 'none', letterSpacing: type === 'password' ? 4 : 0.3 }}
+                    style={{ width: '100%', padding: showToggle ? '15px 48px 15px 20px' : '15px 20px', background: focused ? 'rgba(184,196,216,0.08)' : 'rgba(255,255,255,0.05)', border: `1px solid ${focused ? 'rgba(184,196,216,0.55)' : 'rgba(184,196,216,0.25)'}`, borderRadius: 3, color: 'rgba(240,236,248,0.98)', fontSize: 14, outline: 'none', fontFamily: "'Palatino Linotype', Palatino, serif", transition: 'all 0.3s ease', boxShadow: focused ? '0 0 28px rgba(184,196,216,0.15), inset 0 1px 0 rgba(184,196,216,0.1)' : 'none', letterSpacing: type === 'password' ? 4 : 0.3 }}
                 />
+                {showToggle && (
+                    <button onClick={onToggle} tabIndex={-1}
+                        style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'rgba(184,196,216,0.45)', fontSize: 15, lineHeight: 1, display: 'flex', alignItems: 'center' }}>
+                        {show ? '🙈' : '👁'}
+                    </button>
+                )}
                 {focused && (
-                    <div style={{ position: 'absolute', bottom: 0, left: '8%', right: '8%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(184,196,216,0.7), transparent)', animation: 'fieldGlow 2s ease-in-out infinite' }} />
+                    <div style={{ position: 'absolute', bottom: 0, left: '8%', right: '8%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(184,196,216,0.7), transparent)', animationName: 'fieldGlow', animationDuration: '2s', animationTimingFunction: 'ease-in-out', animationIterationCount: 'infinite' }} />
                 )}
             </div>
         </div>

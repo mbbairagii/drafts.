@@ -1,124 +1,29 @@
-import type { CoverStyle, PageTheme, HandwritingFont, Sticker } from '../types'
-
-export const TOOL_COLORS = [
-    '#1a0f00', '#2c1810', '#8B2020', '#c0392b', '#e74c3c',
-    '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c', '#3498db',
-    '#2980b9', '#9b59b6', '#8e44ad', '#e91e8c', '#ff69b4',
-    '#ffffff', '#d4c9b0', '#a0896e', '#6b5c45', '#2c2416',
-    '#000000', '#1a1a2e', '#0d2137', '#1a3a1a', '#2a1a1a',
-]
-
-export const STICKERS: Sticker[] = [
-    { id: 1, emoji: '🌹', label: 'Rose' },
-    { id: 2, emoji: '🥀', label: 'Wilted Rose' },
-    { id: 3, emoji: '🌙', label: 'Moon' },
-    { id: 4, emoji: '⭐', label: 'Star' },
-    { id: 5, emoji: '✨', label: 'Sparkles' },
-    { id: 6, emoji: '🕯️', label: 'Candle' },
-    { id: 7, emoji: '🦋', label: 'Butterfly' },
-    { id: 8, emoji: '🖤', label: 'Black Heart' },
-    { id: 9, emoji: '💀', label: 'Skull' },
-    { id: 10, emoji: '🔮', label: 'Crystal Ball' },
-    { id: 11, emoji: '🪶', label: 'Feather' },
-    { id: 12, emoji: '🗝️', label: 'Key' },
-    { id: 13, emoji: '📜', label: 'Scroll' },
-    { id: 14, emoji: '🌿', label: 'Herb' },
-    { id: 15, emoji: '🍂', label: 'Fallen Leaf' },
-    { id: 16, emoji: '🕸️', label: 'Spider Web' },
-    { id: 17, emoji: '🦉', label: 'Owl' },
-    { id: 18, emoji: '🌑', label: 'New Moon' },
-    { id: 19, emoji: '⚗️', label: 'Alembic' },
-    { id: 20, emoji: '🪄', label: 'Magic Wand' },
-    { id: 21, emoji: '💫', label: 'Dizzy' },
-    { id: 22, emoji: '🌸', label: 'Blossom' },
-    { id: 23, emoji: '🫧', label: 'Bubbles' },
-    { id: 24, emoji: '🪞', label: 'Mirror' },
-    { id: 25, emoji: '🖊️', label: 'Pen' },
-    { id: 26, emoji: '📎', label: 'Paperclip' },
-    { id: 27, emoji: '🎀', label: 'Ribbon' },
-    { id: 28, emoji: '🌊', label: 'Wave' },
-    { id: 29, emoji: '🕊️', label: 'Dove' },
-    { id: 30, emoji: '🌒', label: 'Crescent' },
-    { id: 31, emoji: '🍁', label: 'Maple Leaf' },
-    { id: 32, emoji: '🌾', label: 'Sheaf' },
-]
+export interface CoverStyle {
+    id: string
+    label: string
+    spine: string
+    body: string
+    bg: string
+    accent: string
+    glow: string
+    page: string
+    bgImage?: string
+}
 
 export const COVER_STYLES: CoverStyle[] = [
-    {
-        id: 'void',
-        name: 'Void',
-        bgImage: '/covers/void.jpeg',
-        bg: '#080808',
-        accent: '#c8a96e',
-        glow: 'rgba(200,169,110,0.18)',
-        customizable: true,
-    },
-    {
-        id: 'scarab',
-        name: 'Scarab',
-        bgImage: '/covers/scarab.jpeg',
-        bg: '#182a18',
-        accent: '#c8a020',
-        glow: 'rgba(200,160,32,0.22)',
-        customizable: false,
-    },
-    {
-        id: 'versailles',
-        name: 'Versailles',
-        bgImage: '/covers/versailles.jpeg',
-        bg: '#0c1928',
-        accent: '#c8a020',
-        glow: 'rgba(200,160,32,0.22)',
-        customizable: false,
-    },
-    {
-        id: 'crimson-seal',
-        name: 'Crimson Seal',
-        bgImage: '/covers/crimson-seal.png',
-        bg: '#2a0810',
-        accent: '#c06060',
-        glow: 'rgba(192,96,96,0.22)',
-        customizable: false,
-    },
-    {
-        id: 'nevermore',
-        name: 'Nevermore',
-        bgImage: '/covers/nevermore.jpeg',
-        bg: '#180f1e',
-        accent: '#9b8a6e',
-        glow: 'rgba(155,138,110,0.2)',
-        customizable: false,
-    },
-    {
-        id: 'relic',
-        name: 'Relic',
-        bgImage: '/covers/relic.png',
-        bg: '#191c14',
-        accent: '#b8a060',
-        glow: 'rgba(184,160,96,0.2)',
-        customizable: false,
-    },
+    { id: 'midnight', label: 'Midnight', spine: '#1a1d3a', body: '#22265a', bg: '#22265a', accent: '#a0aaff', glow: 'rgba(107,127,255,0.5)', page: '#f0f0fa' },
+    { id: 'crimson', label: 'Crimson', spine: '#3a1a1a', body: '#5a2222', bg: '#5a2222', accent: '#ffaaaa', glow: 'rgba(255,107,107,0.5)', page: '#fdf0f0' },
+    { id: 'forest', label: 'Forest', spine: '#1a3a1a', body: '#225a22', bg: '#225a22', accent: '#aaffcc', glow: 'rgba(107,255,158,0.5)', page: '#f0fdf4' },
+    { id: 'ivory', label: 'Ivory', spine: '#3a3a1a', body: '#5a5a22', bg: '#5a5a22', accent: '#ffeeaa', glow: 'rgba(255,224,102,0.5)', page: '#fdfdf0' },
+    { id: 'slate', label: 'Slate', spine: '#1a2030', body: '#22304a', bg: '#22304a', accent: '#aabccc', glow: 'rgba(160,180,204,0.5)', page: '#f0f4f8' },
+    { id: 'rose', label: 'Rose', spine: '#3a1a2a', body: '#5a223a', bg: '#5a223a', accent: '#ffaad4', glow: 'rgba(255,153,204,0.5)', page: '#fdf0f6' },
 ]
 
-export const PAGE_THEMES: PageTheme[] = [
-    { id: 'aged', name: 'Aged', bg: '#f5f0e8', lineColor: '#c8b89a', textColor: '#2a1f0e', pattern: 'lined' },
-    { id: 'cream', name: 'Cream', bg: '#fdfbf5', lineColor: '#d4c9b0', textColor: '#2a1f0e', pattern: 'lined' },
-    { id: 'grid', name: 'Grid', bg: '#f8f6f0', lineColor: '#b8c4b8', textColor: '#1a2a1a', pattern: 'grid' },
-    { id: 'dot', name: 'Dot', bg: '#f9f7f2', lineColor: '#a0a898', textColor: '#1a1a1a', pattern: 'dot' },
-    { id: 'blank', name: 'Blank', bg: '#faf8f3', lineColor: '#000000', textColor: '#1a1a1a', pattern: 'blank' },
-    { id: 'dark', name: 'Dark', bg: '#1a1a2e', lineColor: '#2a2a4e', textColor: '#e0ddd5', pattern: 'lined' },
-    { id: 'void', name: 'Void', bg: '#0d0d0d', lineColor: '#1a1a1a', textColor: '#c8c0b0', pattern: 'dot' },
-    { id: 'forest', name: 'Forest', bg: '#e8f0e8', lineColor: '#a0b8a0', textColor: '#1a2a1a', pattern: 'dot' },
-    { id: 'rose', name: 'Rose', bg: '#fdf0f0', lineColor: '#e0b0b0', textColor: '#2a1010', pattern: 'lined' },
-    { id: 'blood', name: 'Blood', bg: '#1a0505', lineColor: '#3a0a0a', textColor: '#e8c8c8', pattern: 'lined' },
-    { id: 'ink', name: 'Ink', bg: '#f0f0f5', lineColor: '#9090b0', textColor: '#0a0a1a', pattern: 'grid' },
-]
-
-export const HANDWRITING_FONTS: HandwritingFont[] = [
-    { id: 'caveat', name: 'Caveat', url: 'https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap', family: "'Caveat', cursive" },
-    { id: 'satisfy', name: 'Satisfy', url: 'https://fonts.googleapis.com/css2?family=Satisfy&display=swap', family: "'Satisfy', cursive" },
-    { id: 'pacifico', name: 'Pacifico', url: 'https://fonts.googleapis.com/css2?family=Pacifico&display=swap', family: "'Pacifico', cursive" },
-    { id: 'dancing', name: 'Dancing Script', url: 'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap', family: "'Dancing Script', cursive" },
-    { id: 'indie-flower', name: 'Indie Flower', url: 'https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap', family: "'Indie Flower', cursive" },
-    { id: 'kalam', name: 'Kalam', url: 'https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap', family: "'Kalam', cursive" },
+export const HANDWRITING_FONTS = [
+    { id: 'caveat', family: 'Caveat, cursive', label: 'Caveat' },
+    { id: 'shadows', family: "'Shadows Into Light', cursive", label: 'Shadows' },
+    { id: 'dancing', family: "'Dancing Script', cursive", label: 'Dancing' },
+    { id: 'patrick', family: "'Patrick Hand', cursive", label: 'Patrick' },
+    { id: 'indie', family: "'Indie Flower', cursive", label: 'Indie Flower' },
+    { id: 'pacifico', family: 'Pacifico, cursive', label: 'Pacifico' },
 ]
