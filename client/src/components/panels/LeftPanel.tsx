@@ -23,15 +23,17 @@ const TOOLS = [
     { id: 'text' as ToolId, icon: 'T', label: 'Text' },
 ]
 
+const DIM = 'rgba(237,232,223,0.45)'  // visible on dark bg, replaces #6B6B6B
+
 export default function LeftPanel({ activeTool, setActiveTool, toolColor, setToolColor, toolSize, setToolSize, activeFont, setActiveFont, onImageUpload, fileInputRef, accentColor }: Props) {
     return (
         <div style={{ width: 196, display: 'flex', flexDirection: 'column', gap: 8, height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
             <Block title="Tools" accent={accentColor}>
                 {TOOLS.map(t => (
                     <button key={t.id} onClick={() => setActiveTool(t.id)}
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: 'none', background: activeTool === t.id ? `${accentColor}18` : 'transparent', color: activeTool === t.id ? accentColor : '#6B6B6B', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2, transition: 'all 0.15s', outline: activeTool === t.id ? `1px solid ${accentColor}35` : '1px solid transparent', fontFamily: 'Georgia,serif' }}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: 'none', background: activeTool === t.id ? `${accentColor}18` : 'transparent', color: activeTool === t.id ? accentColor : DIM, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2, transition: 'all 0.15s', outline: activeTool === t.id ? `1px solid ${accentColor}35` : '1px solid transparent', fontFamily: 'Georgia,serif' }}
                         onMouseEnter={e => { if (activeTool !== t.id) { e.currentTarget.style.color = '#F5F2ED'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)' } }}
-                        onMouseLeave={e => { if (activeTool !== t.id) { e.currentTarget.style.color = '#6B6B6B'; e.currentTarget.style.background = 'transparent' } }}>
+                        onMouseLeave={e => { if (activeTool !== t.id) { e.currentTarget.style.color = DIM; e.currentTarget.style.background = 'transparent' } }}>
                         <span style={{ fontSize: t.id === 'text' ? 15 : 17, fontWeight: t.id === 'text' ? 900 : 400, width: 20, textAlign: 'center' }}>{t.icon}</span>
                         <span style={{ fontSize: 12, letterSpacing: 0.3 }}>{t.label}</span>
                         {activeTool === t.id && <div style={{ marginLeft: 'auto', width: 4, height: 4, borderRadius: '50%', background: accentColor, boxShadow: `0 0 5px ${accentColor}` }} />}
@@ -64,18 +66,18 @@ export default function LeftPanel({ activeTool, setActiveTool, toolColor, setToo
             <Block title="Handwriting" accent={accentColor}>
                 {HANDWRITING_FONTS.map(f => (
                     <button key={f.id} onClick={() => setActiveFont(f)}
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: 'none', background: activeFont.id === f.id ? `${accentColor}15` : 'transparent', color: activeFont.id === f.id ? accentColor : '#6B6B6B', cursor: 'pointer', fontSize: 15, fontFamily: f.family, textAlign: 'left', outline: activeFont.id === f.id ? `1px solid ${accentColor}30` : '1px solid transparent', transition: 'all 0.15s', marginBottom: 2 }}
+                        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: 'none', background: activeFont.id === f.id ? `${accentColor}15` : 'transparent', color: activeFont.id === f.id ? accentColor : DIM, cursor: 'pointer', fontSize: 15, fontFamily: f.family, textAlign: 'left', outline: activeFont.id === f.id ? `1px solid ${accentColor}30` : '1px solid transparent', transition: 'all 0.15s', marginBottom: 2 }}
                         onMouseEnter={e => { if (activeFont.id !== f.id) { e.currentTarget.style.color = '#F5F2ED'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)' } }}
-                        onMouseLeave={e => { if (activeFont.id !== f.id) { e.currentTarget.style.color = '#6B6B6B'; e.currentTarget.style.background = 'transparent' } }}>
-                        {f.name}
+                        onMouseLeave={e => { if (activeFont.id !== f.id) { e.currentTarget.style.color = DIM; e.currentTarget.style.background = 'transparent' } }}>
+                        {f.label}
                     </button>
                 ))}
             </Block>
 
             <button onClick={() => fileInputRef.current?.click()}
-                style={{ padding: '12px', borderRadius: 11, border: `1px dashed ${accentColor}25`, background: 'transparent', color: '#6B6B6B', cursor: 'pointer', fontFamily: 'Georgia,serif', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, transition: 'all 0.2s' }}
+                style={{ padding: '12px', borderRadius: 11, border: `1px dashed ${accentColor}25`, background: 'transparent', color: DIM, cursor: 'pointer', fontFamily: 'Georgia,serif', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, transition: 'all 0.2s' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = `${accentColor}60`; e.currentTarget.style.color = accentColor; e.currentTarget.style.background = `${accentColor}06` }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = `${accentColor}25`; e.currentTarget.style.color = '#6B6B6B'; e.currentTarget.style.background = 'transparent' }}>
+                onMouseLeave={e => { e.currentTarget.style.borderColor = `${accentColor}25`; e.currentTarget.style.color = DIM; e.currentTarget.style.background = 'transparent' }}>
                 📷 Photo
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={onImageUpload} style={{ display: 'none' }} />
