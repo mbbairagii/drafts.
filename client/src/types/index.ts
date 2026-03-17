@@ -1,6 +1,6 @@
 export type ToolId = 'pen' | 'pencil' | 'highlighter' | 'eraser' | 'text'
 export type PanelId = 'stickers' | 'themes' | 'cover' | 'pages'
-export type CoverId = 'midnight' | 'crimson' | 'forest' | 'ivory' | 'slate' | 'rose'
+export type CoverId = 'void' | 'scarab' | 'versailles' | 'crimson-seal' | 'nevermore' | 'relic'
 export type ThemeId = 'aged' | 'void' | 'grid' | 'dot' | 'blood' | 'ink' | 'cream' | 'blank' | 'dark' | 'forest' | 'rose'
 
 export interface User {
@@ -78,7 +78,6 @@ export interface PageTheme {
 
 export interface HandwritingFont {
     id: string
-    name: string
-    url: string
+    label: string
     family: string
 }

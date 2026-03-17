@@ -179,21 +179,31 @@ export default function DiaryBook({
                     <div style={{ width: 520, height: 700, borderRadius: '3px 16px 16px 3px', position: 'relative', boxShadow: `16px 20px 70px rgba(0,0,0,0.8), -2px 0 24px rgba(0,0,0,0.5), 0 0 50px ${cover.glow}`, perspective: '1400px' }}>
 
                         {/* Spine */}
-                        <div style={{ position: 'absolute', left: 0, top: 0, width: 26, height: '100%', background: cover.bg, zIndex: 5, borderRadius: '3px 0 0 3px', boxShadow: 'inset -4px 0 10px rgba(0,0,0,0.5), 3px 0 10px rgba(0,0,0,0.3)' }}>
+                        <div style={{ position: 'absolute', left: 0, top: 0, width: 26, height: '100%', backgroundColor: cover.bg, zIndex: 5, borderRadius: '3px 0 0 3px', boxShadow: 'inset -4px 0 10px rgba(0,0,0,0.5), 3px 0 10px rgba(0,0,0,0.3)' }}>
                             <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(0deg,rgba(0,0,0,0.04) 0px,rgba(0,0,0,0.04) 1px,transparent 1px,transparent 7px)', borderRadius: 'inherit' }} />
                             <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%) rotate(-90deg)', whiteSpace: 'nowrap', color: 'rgba(255,255,255,0.1)', fontSize: 7, letterSpacing: 3, fontFamily: 'Georgia,serif', textTransform: 'uppercase' }}>{diary.name}</div>
                         </div>
 
                         {/* Page stack */}
                         {Array.from({ length: stackDepth }).map((_, i) => (
-                            <div key={i} style={{ position: 'absolute', right: -(i + 1) * 1.5, top: 2 + i * 0.6, bottom: 2 + i * 0.6, width: 4, borderRadius: '0 2px 2px 0', background: `rgba(245,240,232,${0.55 - i * 0.08})`, zIndex: 3 - i, boxShadow: '1px 0 3px rgba(0,0,0,0.15)' }} />
+                            <div key={i} style={{ position: 'absolute', right: -(i + 1) * 1.5, top: 2 + i * 0.6, bottom: 2 + i * 0.6, width: 4, borderRadius: '0 2px 2px 0', backgroundColor: `rgba(245,240,232,${0.55 - i * 0.08})`, zIndex: 3 - i, boxShadow: '1px 0 3px rgba(0,0,0,0.15)' }} />
                         ))}
 
                         {/* Closed cover */}
                         {!isOpen && (
                             <div
                                 onClick={e => { if ((e.target as HTMLElement).closest('[data-sticker]')) return; handleOpenClick() }}
-                                style={{ position: 'absolute', left: 26, top: 0, right: 0, bottom: 0, background: cover.bg, backgroundImage: `url(${cover.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '0 16px 16px 0', overflow: 'hidden', cursor: 'pointer', transformOrigin: 'left center', animation: isFlipping ? 'db-cover-flip 0.78s cubic-bezier(0.4,0,0.2,1) both' : 'none', transformStyle: 'preserve-3d' }}
+                                style={{
+                                    position: 'absolute', left: 26, top: 0, right: 0, bottom: 0,
+                                    backgroundColor: cover.bg,           // ← was `background: cover.bg` — caused the conflict
+                                    backgroundImage: `url(${cover.bgImage})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    borderRadius: '0 16px 16px 0', overflow: 'hidden', cursor: 'pointer',
+                                    transformOrigin: 'left center',
+                                    animation: isFlipping ? 'db-cover-flip 0.78s cubic-bezier(0.4,0,0.2,1) both' : 'none',
+                                    transformStyle: 'preserve-3d',
+                                }}
                             >
                                 <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(45deg,rgba(0,0,0,0.025) 0px,rgba(0,0,0,0.025) 1px,transparent 1px,transparent 15px)', pointerEvents: 'none', zIndex: 1 }} />
                                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom,rgba(0,0,0,0.12) 0%,rgba(0,0,0,0.35) 42%,rgba(0,0,0,0.55) 100%)', pointerEvents: 'none', zIndex: 2 }} />
@@ -203,11 +213,11 @@ export default function DiaryBook({
 
                                 <div style={{ position: 'absolute', right: -5, top: '18%', display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10 }}>
                                     {Array.from({ length: pageCount }).map((_, i) => (
-                                        <div key={i} style={{ width: 12, height: 9, borderRadius: '0 3px 3px 0', background: i === currentPage % 8 ? cover.accent : 'rgba(255,255,255,0.05)', boxShadow: i === currentPage % 8 ? `0 0 7px ${cover.glow}` : 'none', transition: 'all 0.3s' }} />
+                                        <div key={i} style={{ width: 12, height: 9, borderRadius: '0 3px 3px 0', backgroundColor: i === currentPage % 8 ? cover.accent : 'rgba(255,255,255,0.05)', boxShadow: i === currentPage % 8 ? `0 0 7px ${cover.glow}` : 'none', transition: 'all 0.3s' }} />
                                     ))}
                                 </div>
 
-                                {/* Cover stickers — draggable + resizable */}
+                                {/* Cover stickers */}
                                 {coverStickers.map(s => (
                                     <div
                                         key={s.id}
@@ -227,13 +237,13 @@ export default function DiaryBook({
                                         {selectedCoverSticker === s.id && (
                                             <>
                                                 <button onClick={e => { e.stopPropagation(); removeCoverSticker(s.id) }}
-                                                    style={{ position: 'absolute', top: -10, right: -10, background: '#ff2244', color: '#fff', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 11 }}>×</button>
+                                                    style={{ position: 'absolute', top: -10, right: -10, backgroundColor: '#ff2244', color: '#fff', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 11 }}>×</button>
                                                 <div
                                                     onMouseDown={e => {
                                                         e.stopPropagation()
                                                         resizingSticker.current = { id: s.id, startSize: s.size, startX: e.clientX, startY: e.clientY }
                                                     }}
-                                                    style={{ position: 'absolute', bottom: -7, right: -7, width: 14, height: 14, borderRadius: '50%', background: cover.accent, border: '2px solid rgba(0,0,0,0.4)', cursor: 'se-resize', zIndex: 11 }}
+                                                    style={{ position: 'absolute', bottom: -7, right: -7, width: 14, height: 14, borderRadius: '50%', backgroundColor: cover.accent, border: '2px solid rgba(0,0,0,0.4)', cursor: 'se-resize', zIndex: 11 }}
                                                 />
                                             </>
                                         )}
@@ -243,7 +253,7 @@ export default function DiaryBook({
                                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 44px', zIndex: 5 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28, animation: 'db-line-expand 0.7s 0.1s both' }}>
                                         <div style={{ height: 1, width: 48, background: 'linear-gradient(to left,rgba(255,255,255,0.22),transparent)' }} />
-                                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', boxShadow: `0 0 8px ${cover.accent}` }} />
+                                        <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.3)', boxShadow: `0 0 8px ${cover.accent}` }} />
                                         <div style={{ height: 1, width: 48, background: 'linear-gradient(to right,rgba(255,255,255,0.22),transparent)' }} />
                                     </div>
                                     <h2 style={{ fontFamily: "'Libre Baskerville',Georgia,serif", fontStyle: 'italic', fontSize: 34, color: '#fff', textAlign: 'center', margin: 0, lineHeight: 1.3, letterSpacing: '-0.01em', textShadow: `0 2px 20px rgba(0,0,0,0.95),0 0 48px ${cover.accent}50`, animation: 'db-title-in 0.7s 0.2s both' }}>
@@ -251,7 +261,7 @@ export default function DiaryBook({
                                     </h2>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 28, animation: 'db-line-expand 0.7s 0.3s both' }}>
                                         <div style={{ height: 1, width: 48, background: 'linear-gradient(to left,rgba(255,255,255,0.22),transparent)' }} />
-                                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', boxShadow: `0 0 8px ${cover.accent}` }} />
+                                        <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.3)', boxShadow: `0 0 8px ${cover.accent}` }} />
                                         <div style={{ height: 1, width: 48, background: 'linear-gradient(to right,rgba(255,255,255,0.22),transparent)' }} />
                                     </div>
                                     {diary.passwordHash && (
@@ -273,7 +283,7 @@ export default function DiaryBook({
                                     <div className={!revealDone ? 'db-page-reveal' : ''} onAnimationEnd={() => setRevealDone(true)} style={{ width: '100%', height: '100%' }}>
                                         {page
                                             ? <PageCanvas page={page} tool={tool} toolColor={toolColor} toolSize={toolSize} fontFamily={fontFamily} onUpdate={onUpdatePage} />
-                                            : <div style={{ width: '100%', height: '100%', background: '#f5f0e8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#ccc', fontFamily: 'Georgia,serif' }}>loading…</p></div>
+                                            : <div style={{ width: '100%', height: '100%', backgroundColor: '#f5f0e8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#ccc', fontFamily: 'Georgia,serif' }}>loading…</p></div>
                                         }
                                     </div>
                                 </div>
@@ -294,7 +304,7 @@ export default function DiaryBook({
 
                                 <div style={{ position: 'absolute', right: -5, top: '18%', display: 'flex', flexDirection: 'column', gap: 4, zIndex: 10 }}>
                                     {Array.from({ length: pageCount }).map((_, i) => (
-                                        <div key={i} style={{ width: 12, height: 9, borderRadius: '0 3px 3px 0', background: i === currentPage % 8 ? cover.accent : 'rgba(255,255,255,0.05)', boxShadow: i === currentPage % 8 ? `0 0 7px ${cover.glow}` : 'none', transition: 'all 0.3s' }} />
+                                        <div key={i} style={{ width: 12, height: 9, borderRadius: '0 3px 3px 0', backgroundColor: i === currentPage % 8 ? cover.accent : 'rgba(255,255,255,0.05)', boxShadow: i === currentPage % 8 ? `0 0 7px ${cover.glow}` : 'none', transition: 'all 0.3s' }} />
                                     ))}
                                 </div>
                             </>
@@ -311,12 +321,12 @@ export default function DiaryBook({
                     )}
                 </div>
 
-                {/* Fixed footer */}
+                {/* Footer */}
                 <div style={{ height: 64, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: 10 }}>
                     <div className={isOpen ? 'db-dots-in' : ''} style={{ display: 'flex', gap: 6, alignItems: 'center', opacity: isOpen ? 1 : 0, pointerEvents: isOpen ? 'auto' : 'none' }}>
                         {Array.from({ length: totalPages }).map((_, i) => (
                             <div key={i} onClick={() => onFlip(i > currentPage ? 'next' : 'prev')}
-                                style={{ width: i === currentPage ? 22 : 6, height: 6, borderRadius: 3, background: i === currentPage ? cover.accent : 'rgba(255,255,255,0.08)', boxShadow: i === currentPage ? `0 0 8px ${cover.glow}` : 'none', transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)', cursor: 'pointer' }}
+                                style={{ width: i === currentPage ? 22 : 6, height: 6, borderRadius: 3, backgroundColor: i === currentPage ? cover.accent : 'rgba(255,255,255,0.08)', boxShadow: i === currentPage ? `0 0 8px ${cover.glow}` : 'none', transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)', cursor: 'pointer' }}
                             />
                         ))}
                     </div>
