@@ -44,7 +44,15 @@ export default function DiaryBook({
 
     useEffect(() => { coverStickersRef.current = coverStickers }, [coverStickers])
     useEffect(() => { onUpdateRef.current = onUpdateCoverStickers }, [onUpdateCoverStickers])
-    useEffect(() => { setCoverStickers(diary.coverStickers || []) }, [diary.coverStickers])
+
+    // ✅ FIX: compare content not reference — prevents infinite re-render loop
+    useEffect(() => {
+        const incoming = diary.coverStickers || []
+        setCoverStickers(prev =>
+            JSON.stringify(prev) === JSON.stringify(incoming) ? prev : incoming
+        )
+    }, [diary.coverStickers])
+
     useEffect(() => { if (!isOpen) setRevealDone(false) }, [isOpen])
 
     useEffect(() => {
@@ -195,7 +203,7 @@ export default function DiaryBook({
                                 onClick={e => { if ((e.target as HTMLElement).closest('[data-sticker]')) return; handleOpenClick() }}
                                 style={{
                                     position: 'absolute', left: 26, top: 0, right: 0, bottom: 0,
-                                    backgroundColor: cover.bg,           // ← was `background: cover.bg` — caused the conflict
+                                    backgroundColor: cover.bg,
                                     backgroundImage: `url(${cover.bgImage})`,
                                     backgroundSize: 'cover',
                                     backgroundPosition: 'center',

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import type { HandwritingFont } from '../types'
 
 const STORAGE_KEY = 'drafts_custom_font'
@@ -8,7 +8,6 @@ export function useHandwritingFont() {
         return localStorage.getItem(STORAGE_KEY)
     })
 
-    // Inject @font-face whenever data is loaded
     useEffect(() => {
         if (!customFontData) return
         const existing = document.getElementById('drafts-custom-font-face')
@@ -19,20 +18,23 @@ export function useHandwritingFont() {
         document.head.appendChild(style)
     }, [customFontData])
 
-    const saveFont = (fontData: string) => {
+    // ✅ Stable reference — only recreates when customFontData actually changes
+    const customFont = useMemo<HandwritingFont | null>(() => {
+        if (!customFontData) return null
+        return { id: 'my-handwriting', family: "'MyHandwriting', Georgia, serif", label: 'My Handwriting' }
+    }, [customFontData])
+
+    // ✅ Stable function reference — won't cause re-renders in consumers
+    const saveFont = useCallback((fontData: string) => {
         localStorage.setItem(STORAGE_KEY, fontData)
         setCustomFontData(fontData)
-    }
+    }, [])
 
-    const clearFont = () => {
+    const clearFont = useCallback(() => {
         localStorage.removeItem(STORAGE_KEY)
         setCustomFontData(null)
         document.getElementById('drafts-custom-font-face')?.remove()
-    }
-
-    const customFont: HandwritingFont | null = customFontData
-        ? { id: 'my-handwriting', family: "'MyHandwriting', Georgia, serif", label: 'My Handwriting' }
-        : null
+    }, [])
 
     return { customFont, customFontData, saveFont, clearFont, hasCustomFont: !!customFontData }
 }

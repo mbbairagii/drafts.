@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import type { DiaryPage, ToolId, TextElement, StickerElement, ImageElement } from '../../types'
 import { PAGE_THEMES } from '../../utils/constants'
 import { generateId } from '../../utils/helpers'
@@ -14,10 +14,10 @@ interface Props {
 
 interface Pos { x: number; y: number }
 
-// Isolated so React never re-renders the contentEditable mid-typing
-function TextEditor({ el, onCommit, onRemove }: {
+function TextEditor({ el, onCommit, onRemove, onCommitFinal }: {
     el: TextElement
     onCommit: (id: string, text: string) => void
+    onCommitFinal: (id: string, text: string) => void
     onRemove: (id: string) => void
 }) {
     const ref = useRef<HTMLDivElement>(null)
@@ -25,7 +25,6 @@ function TextEditor({ el, onCommit, onRemove }: {
     useEffect(() => {
         if (!ref.current) return
         ref.current.innerText = el.text || ''
-        // place caret at end
         const range = document.createRange()
         range.selectNodeContents(ref.current)
         range.collapse(false)
@@ -33,7 +32,7 @@ function TextEditor({ el, onCommit, onRemove }: {
         sel?.removeAllRanges()
         sel?.addRange(range)
         ref.current.focus()
-    }, [])  // run once on mount only
+    }, [])
 
     return (
         <div
@@ -45,7 +44,7 @@ function TextEditor({ el, onCommit, onRemove }: {
             onBlur={e => {
                 const text = (e.currentTarget as HTMLDivElement).innerText.trim()
                 if (!text) onRemove(el.id)
-                else onCommit(el.id, text)
+                else onCommitFinal(el.id, text)
             }}
             onKeyDown={e => {
                 if (e.key === 'Escape') {
@@ -107,14 +106,27 @@ export default function PageCanvas({ page, tool, toolColor, toolSize, fontFamily
     const resizingSticker = useRef<{ id: string; startSize: number; startX: number; startY: number } | null>(null)
     const draggingImage = useRef<{ id: string; ox: number; oy: number; startX: number; startY: number } | null>(null)
 
+    // Reset all state when page changes
     useEffect(() => {
         setTexts(page.textElements || [])
         setStickers(page.stickers || [])
         setImages(page.images || [])
     }, [page._id])
 
-    useEffect(() => { setStickers(page.stickers || []) }, [page.stickers])
-    useEffect(() => { setImages(page.images || []) }, [page.images])
+    // ✅ FIX: compare content not reference — prevents infinite re-render loop
+    useEffect(() => {
+        const incoming = page.stickers || []
+        setStickers(prev =>
+            JSON.stringify(prev) === JSON.stringify(incoming) ? prev : incoming
+        )
+    }, [page.stickers])
+
+    useEffect(() => {
+        const incoming = page.images || []
+        setImages(prev =>
+            JSON.stringify(prev) === JSON.stringify(incoming) ? prev : incoming
+        )
+    }, [page.images])
 
     useEffect(() => {
         const canvas = canvasRef.current
@@ -262,24 +274,35 @@ export default function PageCanvas({ page, tool, toolColor, toolSize, fontFamily
             fontFamily,
             color: toolColor,
         }
-        const updated = [...texts, newEl]
+        const updated = [...textsRef.current, newEl]
         setTexts(updated)
-        onUpdate({ ...page, textElements: updated, stickers, images })
+        textsRef.current = updated
+        onUpdateRef.current({ ...pageRef.current, textElements: updated, stickers: stickersRef.current, images: imagesRef.current })
         setEditingId(newEl.id)
     }
 
-    const commitText = (id: string, text: string) => {
-        const updated = texts.map(t => t.id === id ? { ...t, text } : t)
+    // ✅ Local only — fires on every keystroke, no onUpdate cascade
+    const commitText = useCallback((id: string, text: string) => {
+        const updated = textsRef.current.map(t => t.id === id ? { ...t, text } : t)
         setTexts(updated)
-        onUpdate({ ...page, textElements: updated, stickers, images })
-    }
+        textsRef.current = updated
+    }, [])
 
-    const removeText = (id: string) => {
-        const updated = texts.filter(t => t.id !== id)
+    // ✅ Propagates up — fires only on blur/escape
+    const commitTextFinal = useCallback((id: string, text: string) => {
+        const updated = textsRef.current.map(t => t.id === id ? { ...t, text } : t)
         setTexts(updated)
-        onUpdate({ ...page, textElements: updated, stickers, images })
+        textsRef.current = updated
+        onUpdateRef.current({ ...pageRef.current, textElements: updated, stickers: stickersRef.current, images: imagesRef.current })
+    }, [])
+
+    const removeText = useCallback((id: string) => {
+        const updated = textsRef.current.filter(t => t.id !== id)
+        setTexts(updated)
+        textsRef.current = updated
+        onUpdateRef.current({ ...pageRef.current, textElements: updated, stickers: stickersRef.current, images: imagesRef.current })
         setEditingId(null)
-    }
+    }, [])
 
     const removeSticker = (id: string) => {
         const updated = stickers.filter(s => s.id !== id)
@@ -405,7 +428,8 @@ export default function PageCanvas({ page, tool, toolColor, toolSize, fontFamily
                         ? <TextEditor
                             el={el}
                             onCommit={commitText}
-                            onRemove={id => { removeText(id); setEditingId(null) }}
+                            onCommitFinal={commitTextFinal}
+                            onRemove={removeText}
                         />
                         : <div
                             onClick={() => setEditingId(el.id)}
