@@ -16,7 +16,7 @@ export default function CustomCursor({ tool, color }: Props) {
             }
         }
         const style = document.createElement('style')
-        style.textContent = `* { cursor: none !important; }`
+        style.textContent = `* { cursor: none !important; } button, a, input, select, textarea, [role="button"] {cursor: pointer !important;}`
         document.head.appendChild(style)
         document.addEventListener('mousemove', move, { passive: true })
         return () => {

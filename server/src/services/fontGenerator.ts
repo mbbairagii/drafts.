@@ -20,6 +20,15 @@ const UPM = 1000
 const ASCENDER = 800
 const DESCENDER = -200
 
+interface GlyphRaw {
+    char: string
+    codepoint: number
+    rawD: string
+    inkW: number
+    inkH: number
+    rawBbox: { minX: number; maxX: number; minY: number; maxY: number }
+}
+
 interface Glyph {
     char: string
     codepoint: number
@@ -47,69 +56,51 @@ function traceFile(filePath: string): Promise<string> {
 function svgPathToOpentypePath(d: string): opentype.Path {
     const opPath = new opentype.Path()
     const segments = d.match(/[MLCQZmlcqz][^MLCQZmlcqz]*/g) ?? []
-
     const nums = (str: string): number[] =>
         (str.match(/-?\d+(\.\d+)?/g) ?? []).map(Number)
 
     for (const seg of segments) {
         const cmd = seg[0]
         const n = nums(seg.slice(1))
-
         try {
             switch (cmd) {
                 case 'M': case 'm':
-                    if (n.length >= 2) opPath.moveTo(n[0], n[1])
-                    break
+                    if (n.length >= 2) opPath.moveTo(n[0], n[1]); break
                 case 'L': case 'l':
-                    if (n.length >= 2) opPath.lineTo(n[0], n[1])
-                    break
+                    if (n.length >= 2) opPath.lineTo(n[0], n[1]); break
                 case 'C': case 'c':
-                    if (n.length >= 6) opPath.curveTo(n[0], n[1], n[2], n[3], n[4], n[5])
-                    break
+                    if (n.length >= 6) opPath.curveTo(n[0], n[1], n[2], n[3], n[4], n[5]); break
                 case 'Q': case 'q':
-                    if (n.length >= 4) opPath.quadraticCurveTo(n[0], n[1], n[2], n[3])
-                    break
+                    if (n.length >= 4) opPath.quadraticCurveTo(n[0], n[1], n[2], n[3]); break
                 case 'Z': case 'z':
-                    opPath.close()
-                    break
+                    opPath.close(); break
             }
-        } catch {
-            // skip malformed segment
-        }
+        } catch { }
     }
-
     return opPath
 }
 
 function getRawBBox(d: string): { minX: number; maxX: number; minY: number; maxY: number } {
     let minX = Infinity, maxX = -Infinity
     let minY = Infinity, maxY = -Infinity
-
     const segments = d.match(/[MLCQZmlcqz][^MLCQZmlcqz]*/g) ?? []
     const nums = (str: string): number[] =>
         (str.match(/-?\d+(\.\d+)?/g) ?? []).map(Number)
-
-    const trackXY = (x: number, y: number) => {
+    const track = (x: number, y: number) => {
         if (isFinite(x)) { minX = Math.min(minX, x); maxX = Math.max(maxX, x) }
         if (isFinite(y)) { minY = Math.min(minY, y); maxY = Math.max(maxY, y) }
     }
-
     for (const seg of segments) {
-        const cmd = seg[0]
-        const n = nums(seg.slice(1))
+        const cmd = seg[0]; const n = nums(seg.slice(1))
         switch (cmd) {
             case 'M': case 'm': case 'L': case 'l':
-                if (n.length >= 2) trackXY(n[0], n[1])
-                break
+                if (n.length >= 2) track(n[0], n[1]); break
             case 'C': case 'c':
-                if (n.length >= 6) { trackXY(n[0], n[1]); trackXY(n[2], n[3]); trackXY(n[4], n[5]) }
-                break
+                if (n.length >= 6) { track(n[0], n[1]); track(n[2], n[3]); track(n[4], n[5]) }; break
             case 'Q': case 'q':
-                if (n.length >= 4) { trackXY(n[0], n[1]); trackXY(n[2], n[3]) }
-                break
+                if (n.length >= 4) { track(n[0], n[1]); track(n[2], n[3]) }; break
         }
     }
-
     return {
         minX: isFinite(minX) ? minX : 0,
         maxX: isFinite(maxX) ? maxX : 100,
@@ -118,11 +109,19 @@ function getRawBBox(d: string): { minX: number; maxX: number; minY: number; maxY
     }
 }
 
+function getMedianHeight(chars: string[], heightMap: Map<string, number>): number {
+    const heights = chars
+        .map(ch => heightMap.get(ch))
+        .filter((h): h is number => h !== undefined && h > 0)
+    if (!heights.length) return 100
+    heights.sort((a, b) => a - b)
+    return heights[Math.floor(heights.length / 2)]
+}
+
 export async function generateFont(imagePath: string): Promise<string> {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'drafts-font-'))
 
     try {
-        // 1. Normalize sheet
         const normalizedPath = path.join(tmpDir, 'sheet.png')
         await sharp(imagePath)
             .resize(TEMPLATE_W, TEMPLATE_H, { fit: 'fill' })
@@ -134,14 +133,13 @@ export async function generateFont(imagePath: string): Promise<string> {
 
         console.log(`[FontGen] Sheet normalized. CELL_W=${CELL_W} CELL_H=${CELL_H}`)
 
-        // 2. Extract + trace each glyph
-        const glyphs: Glyph[] = []
+        // ── Phase 1: extract raw glyph data ──────────────────────────────
+        const rawGlyphs = new Map<string, GlyphRaw>()
 
         for (let i = 0; i < CHARS.length; i++) {
             const ch = CHARS[i]
             const col = i % COLS
             const row = Math.floor(i / COLS)
-
             const cellX = Math.round(MARGIN_X + col * CELL_W + CELL_PAD)
             const cellY = Math.round(MARGIN_Y + row * CELL_H + CELL_PAD)
             const cellW = CELL_W - CELL_PAD * 2
@@ -160,59 +158,74 @@ export async function generateFont(imagePath: string): Promise<string> {
                 const match = svgString.match(/\sd\s*=\s*"([^"]+)"/)
                 const rawD = match?.[1]?.trim() ?? ''
 
-                if (!rawD || rawD.length < 10) {
-                    glyphs.push({ char: ch, codepoint: ch.charCodeAt(0), svgPath: '', advanceWidth: Math.round(cellW * (UPM / cellH)) })
-                    continue
-                }
-
+                if (!rawD || rawD.length < 10) continue
                 const moveCount = (rawD.match(/M/gi) ?? []).length
-                if (moveCount <= 1 && rawD.length < 30) {
-                    glyphs.push({ char: ch, codepoint: ch.charCodeAt(0), svgPath: '', advanceWidth: Math.round(cellW * (UPM / cellH)) })
-                    continue
-                }
+                if (moveCount <= 1 && rawD.length < 30) continue
 
-                const rawBbox = getRawBBox(rawD)
-                const inkW = rawBbox.maxX - rawBbox.minX
-                const inkH = rawBbox.maxY - rawBbox.minY
+                const bbox = getRawBBox(rawD)
+                const inkW = bbox.maxX - bbox.minX
+                const inkH = bbox.maxY - bbox.minY
+                if (inkH <= 0 || inkW <= 0) continue
 
-                // ✅ ONLY CHANGE: lowercase gets x-height (~52%), uppercase+numbers get cap-height (~72%)
-                const isUppercase = ch >= 'A' && ch <= 'Z'
-                const isNumber = ch >= '0' && ch <= '9'
-                const targetHeight = isUppercase || isNumber ? UPM * 0.72 : UPM * 0.52
-                const scaleToUPM = targetHeight / inkH
-
-                const normalizedD = normalizeSVGPath(
-                    rawD,
-                    rawBbox.minX,
-                    rawBbox.maxY,
-                    scaleToUPM,
-                )
-
-                if (!normalizedD || normalizedD.trim().length < 5) {
-                    glyphs.push({ char: ch, codepoint: ch.charCodeAt(0), svgPath: '', advanceWidth: Math.round(inkW * scaleToUPM) })
-                    continue
-                }
-
-                const sideBearing = Math.round(UPM * 0.03)
-                const advanceWidth = Math.max(
-                    Math.round(inkW * scaleToUPM + sideBearing * 2),
-                    Math.round(UPM * 0.18)
-                )
-
-                console.log(`[FontGen] '${ch}' ✓ inkW=${Math.round(inkW)} inkH=${Math.round(inkH)} scale=${scaleToUPM.toFixed(3)} advW=${advanceWidth}`)
-                glyphs.push({
-                    char: ch,
-                    codepoint: ch.charCodeAt(0),
-                    svgPath: normalizedD,
-                    advanceWidth,
-                })
+                rawGlyphs.set(ch, { char: ch, codepoint: ch.charCodeAt(0), rawD, inkW, inkH, rawBbox: bbox })
             } catch (e) {
                 console.warn(`[FontGen] Exception on '${ch}':`, e)
-                glyphs.push({ char: ch, codepoint: ch.charCodeAt(0), svgPath: '', advanceWidth: Math.round(CELL_W * (UPM / CELL_H)) })
             }
         }
 
-        // 3. Summary
+        // ── Phase 2: compute ONE shared scale per category ───────────────
+        // Using median ink height so outliers (stray marks) don't skew the scale
+        const lowercase = 'abcdefghijklmnopqrstuvwxyz'.split('')
+        const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+        const numbers = '0123456789'.split('')
+
+        const heightMap = new Map<string, number>()
+        rawGlyphs.forEach((g, ch) => heightMap.set(ch, g.inkH))
+
+        const lcMedian = getMedianHeight(lowercase, heightMap)
+        const ucMedian = getMedianHeight(uppercase, heightMap)
+        const numMedian = getMedianHeight(numbers, heightMap)
+
+        // All three categories share the same UPM target — scale derived from median
+        const lcScale = (UPM * 0.52) / lcMedian
+        const ucScale = (UPM * 0.72) / ucMedian
+        const numScale = (UPM * 0.72) / numMedian
+
+        console.log(`[FontGen] Median heights — lc:${Math.round(lcMedian)} uc:${Math.round(ucMedian)} num:${Math.round(numMedian)}`)
+        console.log(`[FontGen] Scales — lc:${lcScale.toFixed(3)} uc:${ucScale.toFixed(3)} num:${numScale.toFixed(3)}`)
+
+        // ── Phase 3: build final glyphs using shared scale ───────────────
+        const glyphs: Glyph[] = []
+
+        for (const ch of CHARS) {
+            const raw = rawGlyphs.get(ch)
+            if (!raw) {
+                glyphs.push({ char: ch, codepoint: ch.charCodeAt(0), svgPath: '', advanceWidth: Math.round(CELL_W * (UPM / CELL_H)) })
+                continue
+            }
+
+            const isUppercase = ch >= 'A' && ch <= 'Z'
+            const isNumber = ch >= '0' && ch <= '9'
+            // ✅ KEY FIX: use shared category scale, not per-glyph scale
+            const scale = isUppercase ? ucScale : isNumber ? numScale : lcScale
+
+            const normalizedD = normalizeSVGPath(raw.rawD, raw.rawBbox.minX, raw.rawBbox.maxY, scale)
+            if (!normalizedD || normalizedD.trim().length < 5) {
+                glyphs.push({ char: ch, codepoint: ch.charCodeAt(0), svgPath: '', advanceWidth: Math.round(raw.inkW * scale) })
+                continue
+            }
+
+            const sideBearing = Math.round(UPM * 0.03)
+            const advanceWidth = Math.max(
+                Math.round(raw.inkW * scale + sideBearing * 2),
+                Math.round(UPM * 0.18)
+            )
+
+            console.log(`[FontGen] '${ch}' ✓ inkH=${Math.round(raw.inkH)} scale=${scale.toFixed(3)} advW=${advanceWidth}`)
+            glyphs.push({ char: ch, codepoint: ch.charCodeAt(0), svgPath: normalizedD, advanceWidth })
+        }
+
+        // ── Phase 4: assemble font ────────────────────────────────────────
         const validGlyphs = glyphs.filter(g => g.svgPath && g.svgPath.trim().length > 0)
         const emptyGlyphs = glyphs.filter(g => !g.svgPath || g.svgPath.trim().length === 0)
 
@@ -223,21 +236,12 @@ export async function generateFont(imagePath: string): Promise<string> {
         if (validGlyphs.length === 0)
             throw new Error('No glyphs extracted. Check image quality or cell alignment.')
 
-        // 4. Build font with opentype.js
         const notdefGlyph = new opentype.Glyph({
-            name: '.notdef',
-            unicode: 0,
-            advanceWidth: UPM,
-            path: new opentype.Path(),
+            name: '.notdef', unicode: 0, advanceWidth: UPM, path: new opentype.Path(),
         })
-
         const spaceGlyph = new opentype.Glyph({
-            name: 'space',
-            unicode: 0x20,
-            advanceWidth: Math.round(UPM * 0.22),
-            path: new opentype.Path(),
+            name: 'space', unicode: 0x20, advanceWidth: Math.round(UPM * 0.22), path: new opentype.Path(),
         })
-
         const otGlyphs = validGlyphs.map(g =>
             new opentype.Glyph({
                 name: g.char,
@@ -256,7 +260,6 @@ export async function generateFont(imagePath: string): Promise<string> {
             glyphs: [notdefGlyph, spaceGlyph, ...otGlyphs],
         })
 
-        // 5. Export to base64 TTF
         const arrayBuffer = font.toArrayBuffer()
         const base64 = Buffer.from(arrayBuffer).toString('base64')
         console.log(`[FontGen] ✅ Font generated. Size: ${arrayBuffer.byteLength} bytes`)
@@ -275,47 +278,22 @@ function sanitizeNum(n: number): number | null {
 function normalizeSVGPath(d: string, minX: number, baselineY: number, scale: number): string {
     const segments = d.match(/[MLCQZmlcqz][^MLCQZmlcqz]*/g) ?? []
     const out: string[] = []
-
     const sx = (x: number): number | null => sanitizeNum((x - minX) * scale)
     const sy = (y: number): number | null => sanitizeNum((baselineY - y) * scale)
-
     const nums = (str: string): number[] =>
         (str.match(/-?\d+(\.\d+)?/g) ?? []).map(Number)
 
     for (const seg of segments) {
-        const cmd = seg[0]
-        const n = nums(seg.slice(1))
-
+        const cmd = seg[0]; const n = nums(seg.slice(1))
         try {
             switch (cmd) {
-                case 'M': case 'm': {
-                    const x = sx(n[0]); const y = sy(n[1])
-                    if (x !== null && y !== null) out.push(`M${x},${y}`)
-                    break
-                }
-                case 'L': case 'l': {
-                    const x = sx(n[0]); const y = sy(n[1])
-                    if (x !== null && y !== null) out.push(`L${x},${y}`)
-                    break
-                }
-                case 'C': case 'c': {
-                    const c = [sx(n[0]), sy(n[1]), sx(n[2]), sy(n[3]), sx(n[4]), sy(n[5])]
-                    if (c.every(v => v !== null)) out.push(`C${c.join(',')}`)
-                    break
-                }
-                case 'Q': case 'q': {
-                    const c = [sx(n[0]), sy(n[1]), sx(n[2]), sy(n[3])]
-                    if (c.every(v => v !== null)) out.push(`Q${c.join(',')}`)
-                    break
-                }
-                case 'Z': case 'z':
-                    out.push('Z')
-                    break
+                case 'M': case 'm': { const x = sx(n[0]); const y = sy(n[1]); if (x !== null && y !== null) out.push(`M${x},${y}`); break }
+                case 'L': case 'l': { const x = sx(n[0]); const y = sy(n[1]); if (x !== null && y !== null) out.push(`L${x},${y}`); break }
+                case 'C': case 'c': { const c = [sx(n[0]), sy(n[1]), sx(n[2]), sy(n[3]), sx(n[4]), sy(n[5])]; if (c.every(v => v !== null)) out.push(`C${c.join(',')}`); break }
+                case 'Q': case 'q': { const c = [sx(n[0]), sy(n[1]), sx(n[2]), sy(n[3])]; if (c.every(v => v !== null)) out.push(`Q${c.join(',')}`); break }
+                case 'Z': case 'z': out.push('Z'); break
             }
-        } catch {
-            // skip malformed segment
-        }
+        } catch { }
     }
-
     return out.join(' ')
 }
