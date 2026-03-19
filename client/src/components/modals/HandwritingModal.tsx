@@ -16,12 +16,17 @@ const SANS = "'DM Sans', sans-serif"
 const PIPELINE_STEPS = [
     { icon: '🖼', label: 'Preprocessing image' },
     { icon: '⊞', label: 'Detecting character grid' },
-    { icon: '✂', label: 'Segmenting 36 glyphs' },
+    { icon: '✂', label: 'Segmenting 62 glyphs' },
     { icon: '〜', label: 'Tracing vector paths' },
     { icon: 'Aa', label: 'Assembling OpenType font' },
 ]
 
-const CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789'.split('')
+// 62 chars: a-z + A-Z + 0-9
+const CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('')
+const COLS = 6
+const ROWS = Math.ceil(CHARS.length / COLS) // 11
+const TEMPLATE_W = 1920
+const TEMPLATE_H = 3700
 
 function Modal({ accentColor, onClose, onFontGenerated }: Props) {
     const [step, setStep] = useState<Step>('template')
@@ -34,7 +39,6 @@ function Modal({ accentColor, onClose, onFontGenerated }: Props) {
     const [fontData, setFontData] = useState<string | null>(null)
     const fileRef = useRef<HTMLInputElement>(null)
 
-    // Lock body scroll
     useEffect(() => {
         document.body.style.overflow = 'hidden'
         return () => { document.body.style.overflow = '' }
@@ -42,36 +46,90 @@ function Modal({ accentColor, onClose, onFontGenerated }: Props) {
 
     const downloadTemplate = () => {
         const canvas = document.createElement('canvas')
-        const W = 1920, H = 2080
-        canvas.width = W; canvas.height = H
+        canvas.width = TEMPLATE_W
+        canvas.height = TEMPLATE_H
         const ctx = canvas.getContext('2d')!
-        ctx.fillStyle = '#FDFCF7'; ctx.fillRect(0, 0, W, H)
-        ctx.fillStyle = '#0e0c18'; ctx.fillRect(0, 0, W, 120)
-        ctx.fillStyle = '#fff'; ctx.font = 'italic bold 44px Georgia'; ctx.textAlign = 'center'
-        ctx.fillText('drafts.  —  Handwriting Template', W / 2, 72)
-        ctx.fillStyle = '#444'; ctx.font = '24px Georgia'
-        ctx.fillText('Write each character naturally inside its box. Use a dark pen. Scan or photograph clearly.', W / 2, 160)
-        const COLS = 6, MX = 80, MY = 180
-        const CW = Math.floor((W - MX * 2) / COLS)
-        const CH = Math.floor((H - MY - 60) / 6)
+
+        const MX = 80, MY = 180
+        const CW = Math.floor((TEMPLATE_W - MX * 2) / COLS)
+        const CH = Math.floor((TEMPLATE_H - MY - 60) / ROWS)
+
+        // Background
+        ctx.fillStyle = '#FDFCF7'
+        ctx.fillRect(0, 0, TEMPLATE_W, TEMPLATE_H)
+
+        // Header bar
+        ctx.fillStyle = '#0e0c18'
+        ctx.fillRect(0, 0, TEMPLATE_W, 120)
+        ctx.fillStyle = '#fff'
+        ctx.font = 'italic bold 44px Georgia'
+        ctx.textAlign = 'center'
+        ctx.fillText('drafts.  —  Handwriting Template', TEMPLATE_W / 2, 72)
+
+        // Subtitle
+        ctx.fillStyle = '#444'
+        ctx.font = '24px Georgia'
+        ctx.fillText('Write each character naturally inside its box. Use a dark pen. Scan or photograph clearly.', TEMPLATE_W / 2, 160)
+
+        // Section labels
+        const sections = [
+            { label: 'lowercase  a – z', startIdx: 0 },
+            { label: 'UPPERCASE  A – Z', startIdx: 26 },
+            { label: 'numbers  0 – 9', startIdx: 52 },
+        ]
+
         CHARS.forEach((ch, i) => {
-            const col = i % COLS, row = Math.floor(i / COLS)
-            const x = MX + col * CW, y = MY + row * CH
-            ctx.strokeStyle = '#c8c0b0'; ctx.lineWidth = 1.5
+            const col = i % COLS
+            const row = Math.floor(i / COLS)
+            const x = MX + col * CW
+            const y = MY + row * CH
+
+            // Section label at start of each group
+            const sec = sections.find(s => s.startIdx === i)
+            if (sec) {
+                ctx.save()
+                ctx.fillStyle = 'rgba(0,0,0,0.22)'
+                ctx.font = 'bold 19px monospace'
+                ctx.textAlign = 'left'
+                ctx.textBaseline = 'bottom'
+                ctx.fillText(sec.label, MX, y - 4)
+                ctx.restore()
+            }
+
+            // Cell border
+            ctx.strokeStyle = '#c8c0b0'
+            ctx.lineWidth = 1.5
             ctx.strokeRect(x + 6, y + 6, CW - 12, CH - 12)
-            ctx.strokeStyle = 'rgba(180,160,120,0.35)'; ctx.lineWidth = 1
-            ctx.beginPath(); ctx.moveTo(x + 20, y + CH * 0.72); ctx.lineTo(x + CW - 20, y + CH * 0.72); ctx.stroke()
-            ctx.fillStyle = 'rgba(0,0,0,0.06)'; ctx.font = `${CH * 0.52}px Georgia`
-            ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
+
+            // Baseline guide
+            ctx.strokeStyle = 'rgba(180,160,120,0.35)'
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            ctx.moveTo(x + 20, y + CH * 0.72)
+            ctx.lineTo(x + CW - 20, y + CH * 0.72)
+            ctx.stroke()
+
+            // Ghost letter
+            ctx.fillStyle = 'rgba(0,0,0,0.06)'
+            ctx.font = `${CH * 0.52}px Georgia`
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'alphabetic'
             ctx.fillText(ch, x + CW / 2, y + CH * 0.72)
-            ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.font = 'bold 16px monospace'
-            ctx.textAlign = 'left'; ctx.textBaseline = 'top'
+
+            // Corner label
+            ctx.fillStyle = 'rgba(0,0,0,0.22)'
+            ctx.font = 'bold 16px monospace'
+            ctx.textAlign = 'left'
+            ctx.textBaseline = 'top'
             ctx.fillText(ch, x + 14, y + 12)
         })
+
         canvas.toBlob(blob => {
             const url = URL.createObjectURL(blob!)
             const a = document.createElement('a')
-            a.href = url; a.download = 'drafts-handwriting-template.png'; a.click()
+            a.href = url
+            a.download = 'drafts-handwriting-template.png'
+            a.click()
         })
     }
 
@@ -138,7 +196,6 @@ function Modal({ accentColor, onClose, onFontGenerated }: Props) {
                 @keyframes hm-border{ 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
             `}</style>
 
-            {/* Card wrapper with animated gold border */}
             <div style={{ position: 'relative', animation: 'hm-in 0.45s cubic-bezier(0.16,1,0.3,1) both' }}>
 
                 {/* Animated border ring */}
@@ -175,7 +232,6 @@ function Modal({ accentColor, onClose, onFontGenerated }: Props) {
                     {/* ── Header ── */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
                         <div>
-                            {/* Badge */}
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '4px 12px', borderRadius: 20, border: `1px solid ${G(0.22)}`, background: G(0.06), marginBottom: 10 }}>
                                 <span style={{ fontSize: 9, color: G(0.9) }}>✦</span>
                                 <p style={{ margin: 0, fontSize: 8, letterSpacing: '0.5em', fontFamily: SANS, textTransform: 'uppercase', background: `linear-gradient(90deg, ${G(1)}, rgba(255,230,120,1), ${G(1)})`, backgroundSize: '200% auto', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'hm-shine 3s linear infinite' }}>your handwriting font</p>
@@ -186,7 +242,6 @@ function Modal({ accentColor, onClose, onFontGenerated }: Props) {
                             </h2>
                         </div>
 
-                        {/* Close button */}
                         <button onClick={onClose}
                             style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${G(0.2)}`, background: G(0.05), color: G(0.5), cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 16, transition: 'all 0.2s', outline: 'none' }}
                             onMouseEnter={e => { e.currentTarget.style.background = G(0.12); e.currentTarget.style.borderColor = G(0.5); e.currentTarget.style.color = G(0.9) }}
@@ -222,16 +277,25 @@ function Modal({ accentColor, onClose, onFontGenerated }: Props) {
                                 Scan or photograph it flat and clear.
                             </p>
 
-                            {/* Compact grid preview */}
+                            {/* Grid preview — 3 sections */}
                             <div style={{ background: G(0.03), border: `1px solid ${G(0.1)}`, borderRadius: 10, padding: '14px 16px 10px', marginBottom: 20 }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: 4 }}>
-                                    {CHARS.map(ch => (
-                                        <div key={ch} style={{ aspectRatio: '1', border: `1px solid ${G(0.12)}`, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontFamily: 'Georgia,serif', color: G(0.35) }}>
-                                            {ch}
+                                {[
+                                    { label: 'a – z', chars: CHARS.slice(0, 26) },
+                                    { label: 'A – Z', chars: CHARS.slice(26, 52) },
+                                    { label: '0 – 9', chars: CHARS.slice(52) },
+                                ].map(section => (
+                                    <div key={section.label} style={{ marginBottom: 10 }}>
+                                        <p style={{ margin: '0 0 5px', fontSize: 8, color: G(0.35), letterSpacing: '0.3em', textTransform: 'uppercase', fontFamily: SANS }}>{section.label}</p>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(13, 1fr)', gap: 3 }}>
+                                            {section.chars.map(ch => (
+                                                <div key={ch} style={{ aspectRatio: '1', border: `1px solid ${G(0.12)}`, borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Georgia,serif', color: G(0.4) }}>
+                                                    {ch}
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
-                                <p style={{ margin: '10px 0 0', fontSize: 8, color: G(0.25), textAlign: 'center', letterSpacing: '0.35em', textTransform: 'uppercase', fontFamily: SANS }}>36 glyphs — a–z + 0–9</p>
+                                    </div>
+                                ))}
+                                <p style={{ margin: '6px 0 0', fontSize: 8, color: G(0.25), textAlign: 'center', letterSpacing: '0.35em', textTransform: 'uppercase', fontFamily: SANS }}>62 glyphs — a–z · A–Z · 0–9</p>
                             </div>
 
                             <div style={{ display: 'flex', gap: 10 }}>
@@ -324,7 +388,6 @@ function Modal({ accentColor, onClose, onFontGenerated }: Props) {
                     {/* ── STEP: Preview ── */}
                     {step === 'preview' && (
                         <div>
-                            {/* Success pill */}
                             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 18px', borderRadius: 24, border: `1px solid ${G(0.38)}`, background: G(0.08), boxShadow: `0 0 24px ${G(0.15)}` }}>
                                     <span style={{ color: G(1), fontSize: 11 }}>✦</span>
@@ -333,18 +396,18 @@ function Modal({ accentColor, onClose, onFontGenerated }: Props) {
                                 </div>
                             </div>
 
-                            {/* Font preview on light bg */}
                             <div style={{ background: 'rgba(253,252,247,0.96)', borderRadius: 10, padding: '20px 22px', marginBottom: 16, border: `1px solid ${G(0.18)}`, boxShadow: `0 0 28px ${G(0.1)}` }}>
                                 <p style={{ margin: '0 0 3px', fontSize: 8, letterSpacing: '0.4em', color: 'rgba(0,0,0,0.28)', fontFamily: SANS, textTransform: 'uppercase' }}>preview</p>
-                                <p style={{ margin: 0, fontFamily: "'MyHandwriting', Georgia, serif", fontSize: 28, color: '#1a1a2e', lineHeight: 1.5 }}>Hello world, this is my diary.</p>
-                                <p style={{ margin: '6px 0 0', fontFamily: "'MyHandwriting', Georgia, serif", fontSize: 18, color: '#555', lineHeight: 1.6 }}>abcdefghijklmnopqrstuvwxyz 0123456789</p>
+                                <p style={{ margin: 0, fontFamily: "'MyHandwriting', Georgia, serif", fontSize: 28, color: '#1a1a2e', lineHeight: 1.5 }}>Hello World, this is my diary.</p>
+                                <p style={{ margin: '6px 0 0', fontFamily: "'MyHandwriting', Georgia, serif", fontSize: 16, color: '#555', lineHeight: 1.6 }}>abcdefghijklmnopqrstuvwxyz</p>
+                                <p style={{ margin: '2px 0 0', fontFamily: "'MyHandwriting', Georgia, serif", fontSize: 16, color: '#555', lineHeight: 1.6 }}>ABCDEFGHIJKLMNOPQRSTUVWXYZ</p>
+                                <p style={{ margin: '2px 0 0', fontFamily: "'MyHandwriting', Georgia, serif", fontSize: 16, color: '#555', lineHeight: 1.6 }}>0123456789</p>
                             </div>
 
-                            {/* Info note */}
                             <div style={{ background: G(0.05), border: `1px solid ${G(0.15)}`, borderRadius: 9, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                                 <span style={{ color: G(0.7), fontSize: 13, marginTop: 1, flexShrink: 0 }}>✦</span>
                                 <p style={{ margin: 0, fontFamily: SERIF, fontStyle: 'italic', fontSize: 12, color: 'rgba(237,232,223,0.52)', lineHeight: 1.65 }}>
-                                    36 unique glyphs extracted from your handwriting and compiled into a real OpenType font — saved to this diary.
+                                    62 unique glyphs — a–z, A–Z, and 0–9 — extracted from your handwriting and compiled into a real OpenType font, saved to this diary.
                                 </p>
                             </div>
 

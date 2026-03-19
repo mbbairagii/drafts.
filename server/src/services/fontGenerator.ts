@@ -6,14 +6,15 @@ import opentype from 'opentype.js'
 
 const Potrace = require('potrace')
 
-const CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789'.split('')
+const CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('')
 const COLS = 6
+const ROWS = Math.ceil(CHARS.length / COLS)
 const TEMPLATE_W = 1920
-const TEMPLATE_H = 2080
+const TEMPLATE_H = 3700
 const MARGIN_X = 80
 const MARGIN_Y = 180
 const CELL_W = Math.floor((TEMPLATE_W - MARGIN_X * 2) / COLS)
-const CELL_H = Math.floor((TEMPLATE_H - MARGIN_Y - 60) / 6)
+const CELL_H = Math.floor((TEMPLATE_H - MARGIN_Y - 60) / ROWS)
 const CELL_PAD = 18
 const UPM = 1000
 const ASCENDER = 800
@@ -80,7 +81,6 @@ function svgPathToOpentypePath(d: string): opentype.Path {
     return opPath
 }
 
-// Bounding box in raw SVG coordinates (before any flip/scale)
 function getRawBBox(d: string): { minX: number; maxX: number; minY: number; maxY: number } {
     let minX = Infinity, maxX = -Infinity
     let minY = Infinity, maxY = -Infinity
@@ -171,21 +171,20 @@ export async function generateFont(imagePath: string): Promise<string> {
                     continue
                 }
 
-                // Get bbox BEFORE any transformation — in raw SVG pixel coords
                 const rawBbox = getRawBBox(rawD)
                 const inkW = rawBbox.maxX - rawBbox.minX
                 const inkH = rawBbox.maxY - rawBbox.minY
 
-                // Scale based on ink height, not cell height — so tall letters fill ascender space
-                const scaleToUPM = (ASCENDER * 0.85) / inkH
+                // ✅ ONLY CHANGE: lowercase gets x-height (~52%), uppercase+numbers get cap-height (~72%)
+                const isUppercase = ch >= 'A' && ch <= 'Z'
+                const isNumber = ch >= '0' && ch <= '9'
+                const targetHeight = isUppercase || isNumber ? UPM * 0.72 : UPM * 0.52
+                const scaleToUPM = targetHeight / inkH
 
-                // ✅ KEY FIX: translate origin so:
-                //   - ink left edge → x = sideBearing
-                //   - ink bottom (maxY in SVG) → y = 0 (baseline in font space)
                 const normalizedD = normalizeSVGPath(
                     rawD,
-                    rawBbox.minX,   // subtract this so ink starts at x=0
-                    rawBbox.maxY,   // this is the baseline (bottom of ink in SVG = y=0 in font)
+                    rawBbox.minX,
+                    rawBbox.maxY,
                     scaleToUPM,
                 )
 
@@ -257,6 +256,7 @@ export async function generateFont(imagePath: string): Promise<string> {
             glyphs: [notdefGlyph, spaceGlyph, ...otGlyphs],
         })
 
+        // 5. Export to base64 TTF
         const arrayBuffer = font.toArrayBuffer()
         const base64 = Buffer.from(arrayBuffer).toString('base64')
         console.log(`[FontGen] ✅ Font generated. Size: ${arrayBuffer.byteLength} bytes`)
@@ -272,13 +272,10 @@ function sanitizeNum(n: number): number | null {
     return Math.max(-32768, Math.min(32767, Math.round(n * 10) / 10))
 }
 
-// minX and baselineY are raw SVG coords of ink origin
-// scale maps SVG pixels → font units
 function normalizeSVGPath(d: string, minX: number, baselineY: number, scale: number): string {
     const segments = d.match(/[MLCQZmlcqz][^MLCQZmlcqz]*/g) ?? []
     const out: string[] = []
 
-    // Translate X so ink starts at 0, flip+translate Y so ink bottom = baseline (y=0)
     const sx = (x: number): number | null => sanitizeNum((x - minX) * scale)
     const sy = (y: number): number | null => sanitizeNum((baselineY - y) * scale)
 
