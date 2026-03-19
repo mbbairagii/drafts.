@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDiary } from '../hooks/useDiary'
+import { useHandwritingFont } from '../hooks/useHandwritingFont'
 import { COVER_STYLES, HANDWRITING_FONTS } from '../utils/constants'
 import { generateId } from '../utils/helpers'
 import type { Diary, DiaryPage, ToolId, PanelId, CoverId, ThemeId, HandwritingFont, StickerElement } from '../types'
@@ -18,6 +19,7 @@ export default function DiaryScreen() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
     const { getDiary, updateDiary, getPages, addPage, updatePage, deletePage } = useDiary()
+    const { customFont, saveFont, clearFont } = useHandwritingFont()
 
     const [diary, setDiary] = useState<Diary | null>(null)
     const [pages, setPages] = useState<DiaryPage[]>([])
@@ -40,6 +42,11 @@ export default function DiaryScreen() {
 
     useEffect(() => { diaryRef.current = diary }, [diary])
     useEffect(() => { pagesRef.current = pages }, [pages])
+
+    // Auto-select custom font when it becomes available
+    useEffect(() => {
+        if (customFont) setActiveFont(customFont)
+    }, [customFont])
 
     useEffect(() => {
         if (!id) return
@@ -254,6 +261,9 @@ export default function DiaryScreen() {
                         onImageUpload={handleImageUpload}
                         fileInputRef={fileInputRef}
                         accentColor={cover.accent}
+                        customFont={customFont}
+                        onFontGenerated={saveFont}
+                        onClearCustomFont={clearFont}
                     />
                 </div>
 
