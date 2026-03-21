@@ -28,7 +28,7 @@ const ROWS = Math.ceil(CHARS.length / COLS) // 11
 const TEMPLATE_W = 1920
 const TEMPLATE_H = 3700
 
-function Modal({ accentColor, onClose, onFontGenerated }: Props) {
+function Modal({ onClose, onFontGenerated }: Props) {
     const [step, setStep] = useState<Step>('template')
     const [dragOver, setDragOver] = useState(false)
     const [file, setFile] = useState<File | null>(null)
