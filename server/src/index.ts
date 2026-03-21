@@ -16,6 +16,7 @@ app.use(cors({
         const allowed = [
             'http://localhost:5173',
             'http://localhost:3000',
+            'https://drafts-dun.vercel.app',
             process.env.CLIENT_URL || '',
         ]
         if (!origin || allowed.includes(origin)) callback(null, true)
