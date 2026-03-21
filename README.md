@@ -123,3 +123,7 @@ Open `http://localhost:5173`
 | [MongoDB Atlas](https://cloud.mongodb.com) | Database |
 
 Set `VITE_API_URL` on Vercel and all `.env` vars on Render. Atlas Network Access should allow `0.0.0.0/0`.
+
+
+
+Designed and Developed by Mohini
