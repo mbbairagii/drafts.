@@ -11,7 +11,19 @@ dotenv.config()
 
 const app = express()
 
-app.use(cors())
+app.use(cors({
+    origin: (origin, callback) => {
+        const allowed = [
+            'http://localhost:5173',
+            'http://localhost:3000',
+            process.env.CLIENT_URL || '',
+        ]
+        if (!origin || allowed.includes(origin)) callback(null, true)
+        else callback(new Error('Not allowed by CORS'))
+    },
+    credentials: true
+}))
+
 app.use(express.json({ limit: '20mb' }))        // ← was default 100kb, now 20mb
 app.use(express.urlencoded({ limit: '20mb', extended: true }))
 app.use('/api/font', fontRouter)
