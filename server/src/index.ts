@@ -25,13 +25,13 @@ app.use(cors({
     credentials: true
 }))
 
-app.use(express.json({ limit: '20mb' }))        // ← was default 100kb, now 20mb
+app.use(express.json({ limit: '20mb' }))
 app.use(express.urlencoded({ limit: '20mb', extended: true }))
-app.use('/api/font', fontRouter)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/diaries', diaryRoutes)
 app.use('/api/diaries', pageRoutes)
+app.use('/api/font', fontRouter)
 
 mongoose.connect(process.env.MONGO_URI!)
     .then(() => console.log('MongoDB connected'))
