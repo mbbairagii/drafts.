@@ -9,7 +9,7 @@ import LandingScreen from './pages/LandingScreen'
 import CustomCursor from './components/ui/CustomCursor'
 
 function AppRoutes() {
-  const { user, loading } = useAuth()
+  const { user, loading } = useAuth() as any
   const location = useLocation()
 
   const Loader = () => (
@@ -45,7 +45,7 @@ export default function App() {
   return (
     <StoreProvider>
       <BrowserRouter>
-        <CustomCursor tool="" color="#6c63ff" />
+        <CustomCursor tool={null} color="#6c63ff" />
         <AppRoutes />
       </BrowserRouter>
     </StoreProvider>

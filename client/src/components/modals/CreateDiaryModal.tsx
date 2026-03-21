@@ -58,10 +58,10 @@ export default function CreateDiaryModal({ onClose, onCreated }: Props) {
                         <div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 20 }}>
                                 {COVER_STYLES.map(c => (
-                                    <div key={c.id} onClick={() => setCover(c.id)}
+                                    <div key={c.id} onClick={() => setCover(c.id as CoverId)}
                                         style={{ height: 80, borderRadius: 12, background: c.bg, cursor: 'pointer', border: cover === c.id ? `2px solid ${c.accent}` : '2px solid transparent', boxShadow: cover === c.id ? `0 0 20px ${c.glow}` : 'none', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 8, transition: 'all 0.2s', position: 'relative', overflow: 'hidden' }}>
                                         {cover === c.id && <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(circle,${c.glow} 0%,transparent 70%)` }} />}
-                                        <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.9)', zIndex: 1 }}>{c.name}</span>
+                                        <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.9)', zIndex: 1 }}>{(c as any).name}</span>
                                     </div>
                                 ))}
                             </div>
@@ -69,7 +69,7 @@ export default function CreateDiaryModal({ onClose, onCreated }: Props) {
                                 <div style={{ width: 36, height: 48, borderRadius: 4, background: coverStyle.bg, boxShadow: `0 0 12px ${coverStyle.glow}`, flexShrink: 0 }} />
                                 <div>
                                     <p style={{ color: '#F5F2ED', fontSize: 14, fontFamily: "'Caveat',cursive", margin: 0 }}>{name}</p>
-                                    <p style={{ color: '#3A3A3A', fontSize: 11, margin: '3px 0 0', fontFamily: 'Georgia,serif' }}>{coverStyle.name} · {password ? '🔒 locked' : '🔓 open'}</p>
+                                    <p style={{ color: '#3A3A3A', fontSize: 11, margin: '3px 0 0', fontFamily: 'Georgia,serif' }}>{(coverStyle as any).name} · {password ? '🔒 locked' : '🔓 open'}</p>
                                 </div>
                             </div>
                         </div>
