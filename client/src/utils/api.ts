@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const api = axios.create({ baseURL: '/api' })
+const api = axios.create({
+    baseURL: 'https://drafts-server.onrender.com/api'
+})
 
 api.interceptors.request.use(config => {
     const token = localStorage.getItem('token')
@@ -9,7 +11,7 @@ api.interceptors.request.use(config => {
 })
 
 api.interceptors.response.use(
-    response => response.data,  // ← auto-unwrap .data so every call returns the payload directly
+    response => response.data,
     error => Promise.reject(error)
 )
 
