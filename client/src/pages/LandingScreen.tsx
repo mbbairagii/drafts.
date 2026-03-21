@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import skullImg from '../assets/00.png'
 import handImg from '../assets/01.png'
 
+
 const INK = '#06050A'
 const OFF = '#EDE8DF'
 const RUST = '#7C3318'
 const DIM = (a: number) => `rgba(237,232,223,${a})`
 const FONT = "'Libre Baskerville', Georgia, serif"
 const SANS = "'DM Sans', system-ui, sans-serif"
+
 
 const ABOUT_FEATURES = [
     { n: '01', t: 'Realistic diary', b: 'A physical book at center screen. Leather cover, elastic band. Click open, flip real pages.' },
@@ -21,6 +23,7 @@ const ABOUT_FEATURES = [
     { n: '08', t: 'Zero ads, zero tracking', b: 'Your thoughts are not a product. No ads, no analytics, no selling your data. Ever.' },
 ]
 
+
 export default function LandingScreen() {
     const navigate = useNavigate()
     const trackRef = useRef<HTMLDivElement>(null)
@@ -28,12 +31,14 @@ export default function LandingScreen() {
     const targetX = useRef(0)
     const currentX = useRef(0)
 
+
     const [pct, setPct] = useState(0)
     const [loaderDone, setLoaderDone] = useState(false)
     const [loaderGone, setLoaderGone] = useState(false)
     const [progress, setProgress] = useState(0)
     const [aboutOpen, setAboutOpen] = useState(false)
     const [activePanel, setActivePanel] = useState(0)
+
 
     useEffect(() => {
         let cur = 0
@@ -49,10 +54,12 @@ export default function LandingScreen() {
         return () => clearInterval(iv)
     }, [])
 
+
     useEffect(() => {
         if (!loaderGone) return
         const lerp = (a: number, b: number, t: number) => a + (b - a) * t
         const getMax = () => trackRef.current ? trackRef.current.scrollWidth - window.innerWidth : 0
+
 
         const onWheel = (e: WheelEvent) => { e.preventDefault(); targetX.current += e.deltaY * 1.05 + e.deltaX * 0.5 }
         let ty = 0
@@ -86,12 +93,14 @@ export default function LandingScreen() {
         }
     }, [loaderGone])
 
+
     return (
         <>
             <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
         html, body, #root { height: 100%; overflow: hidden; }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 
         @keyframes loaderExit {
           0%   { opacity: 1; transform: translateY(0) scale(1); }
@@ -136,6 +145,7 @@ export default function LandingScreen() {
         @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes sheetUp   { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
+
         .btn-solid {
           position: relative; overflow: hidden;
           font-family: ${SANS}; font-size: 10px; font-weight: 500;
@@ -151,6 +161,7 @@ export default function LandingScreen() {
         .btn-solid:hover::after { transform: translateY(0); }
         .btn-solid span { position: relative; z-index: 1; transition: color .44s; }
         .btn-solid:hover span { color: ${OFF}; }
+
 
         .btn-ghost {
           position: relative; overflow: hidden;
@@ -170,6 +181,7 @@ export default function LandingScreen() {
         .btn-ghost:hover span { color: ${OFF}; }
         .btn-ghost:hover { border-color: ${DIM(.32)}; }
 
+
         .nav-about {
           font-family: ${SANS}; font-size: 10px; font-weight: 400;
           letter-spacing: .34em; text-transform: uppercase;
@@ -186,15 +198,19 @@ export default function LandingScreen() {
         .nav-about:hover { color: ${OFF}; }
         .nav-about:hover::after { transform: scaleX(1); }
 
+
         .stat-card { cursor: default; transition: transform .35s cubic-bezier(.16,1,.3,1); }
         .stat-card:hover { transform: translateY(-5px); }
+
 
         .feature-row { border-top: 1px solid ${DIM(.06)}; padding: 22px 0; transition: border-color .28s; }
         .feature-row:hover { border-top-color: ${DIM(.2)}; }
 
+
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: ${DIM(.08)}; }
       `}</style>
+
 
             {/* ══════════════════════════════════
           LOADER
@@ -210,11 +226,15 @@ export default function LandingScreen() {
                     pointerEvents: loaderDone ? 'none' : 'auto',
                 }}>
 
+
                     <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 20, color: OFF, opacity: .7, letterSpacing: '-.01em' }}>drafts.</p>
+
 
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 0 }}>
 
+
                         <p style={{ fontFamily: SANS, fontSize: 8, color: DIM(.18), letterSpacing: '.6em', textTransform: 'uppercase', fontWeight: 300, marginBottom: 28 }}>opening journal</p>
+
 
                         <div style={{ position: 'relative', overflow: 'hidden' }}>
                             <p
@@ -249,6 +269,7 @@ export default function LandingScreen() {
                             >{pct}</p>
                         </div>
 
+
                         <div style={{ width: 'clamp(200px,28vw,380px)', marginTop: 32 }}>
                             <div style={{ height: 1, background: DIM(.07), position: 'relative', overflow: 'hidden', marginBottom: 12 }}>
                                 <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: `${pct}%`, background: `linear-gradient(90deg, ${RUST}, ${DIM(.45)})`, transition: 'width .09s ease' }} />
@@ -261,6 +282,7 @@ export default function LandingScreen() {
                         </div>
                     </div>
 
+
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                         <p style={{ fontFamily: SANS, fontSize: 8, color: DIM(.1), letterSpacing: '.38em', textTransform: 'uppercase', fontWeight: 300 }}>personal diary</p>
                         <div style={{ textAlign: 'right' }}>
@@ -269,8 +291,10 @@ export default function LandingScreen() {
                         </div>
                     </div>
 
+
                 </div>
             )}
+
 
             {/* ══════════════════════════════════
           ABOUT OVERLAY
@@ -305,10 +329,12 @@ export default function LandingScreen() {
                 </div>
             )}
 
+
             {/* ══════════════════════════════════
           MAIN
       ══════════════════════════════════ */}
             <div style={{ position: 'fixed', inset: 0, background: INK, overflow: 'hidden', opacity: loaderGone ? 1 : 0, transition: 'opacity .5s' }}>
+
 
                 <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 300, padding: '20px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', animation: loaderGone ? 'fadeIn .6s .1s both' : 'none' }}>
                     <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 20, color: OFF, opacity: .88, cursor: 'default' }}>drafts.</p>
@@ -318,9 +344,11 @@ export default function LandingScreen() {
                     </div>
                 </nav>
 
+
                 <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 300, height: 1, background: DIM(.05) }}>
                     <div style={{ height: '100%', background: RUST, width: `${progress * 100}%`, transition: 'width .04s' }} />
                 </div>
+
 
                 <div style={{ position: 'fixed', bottom: 26, right: 48, zIndex: 300, display: 'flex', gap: 6 }}>
                     {[0, 1].map(i => (
@@ -328,26 +356,33 @@ export default function LandingScreen() {
                     ))}
                 </div>
 
+
                 <div style={{ position: 'fixed', bottom: 22, left: 48, zIndex: 300, display: 'flex', alignItems: 'center', gap: 10, opacity: loaderGone && progress < 0.05 ? 1 : 0, transition: 'opacity .6s' }}>
                     <div style={{ width: 24, height: 1, background: DIM(.18), transformOrigin: 'left', animation: loaderGone ? 'lineExpand 1s 1.8s cubic-bezier(.16,1,.3,1) both' : 'none' }} />
                     <p style={{ fontFamily: SANS, fontSize: 8, color: DIM(.18), letterSpacing: '.48em', textTransform: 'uppercase', fontWeight: 300, animation: loaderGone ? 'fadeIn .7s 1.9s both' : 'none' }}>scroll</p>
                 </div>
 
+
                 <div ref={trackRef} style={{ display: 'flex', height: '100vh', willChange: 'transform', position: 'absolute', top: 0, left: 0 }}>
+
 
                     {/* ════ PANEL 1 ════ */}
                     <div style={{ width: '100vw', height: '100vh', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+
 
                         <img src={skullImg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '55% 15%', display: 'block', filter: 'brightness(.36) contrast(1.1) saturate(0)', animation: loaderGone ? 'imgScale 2s .05s cubic-bezier(.4,0,.2,1) both' : 'none' }} />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(6,5,10,.5) 0%, rgba(6,5,10,.06) 38%, rgba(6,5,10,.92) 100%)' }} />
                         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(6,5,10,.78) 0%, rgba(6,5,10,.16) 55%, rgba(6,5,10,.06) 100%)' }} />
                         <div style={{ position: 'absolute', inset: 0, backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.03'/%3E%3C/svg%3E")`, backgroundSize: '380px 380px', mixBlendMode: 'overlay', pointerEvents: 'none' }} />
 
+
                         <div style={{ position: 'absolute', inset: 0, zIndex: 2, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 'clamp(48px,7vw,88px) 48px 0' }}>
 
+
                             <div style={{ overflow: 'hidden', marginBottom: 'clamp(12px,1.8vw,20px)' }}>
-                                <p style={{ fontFamily: SANS, fontSize: 9, color: RUST, letterSpacing: '.72em', textTransform: 'uppercase', fontWeight: 400, animation: loaderGone ? 'wordRise .9s .1s cubic-bezier(.16,1,.3,1) both' : 'none' }}>personal diary — est. 2025</p>
+                                <p style={{ fontFamily: SANS, fontSize: 9, color: RUST, letterSpacing: '.72em', textTransform: 'uppercase', fontWeight: 400, animation: loaderGone ? 'wordRise .9s .1s cubic-bezier(.16,1,.3,1) both' : 'none' }}>personal diary — est. 2026</p>
                             </div>
+
 
                             <div style={{ overflow: 'hidden', marginBottom: 8 }}>
                                 <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(52px,9.5vw,138px)', color: OFF, lineHeight: .88, letterSpacing: '-.018em', animation: loaderGone ? 'wordRise 1.3s .2s cubic-bezier(.16,1,.3,1) both' : 'none' }}>Never meant</h1>
@@ -355,6 +390,7 @@ export default function LandingScreen() {
                             <div style={{ overflow: 'hidden', marginBottom: 'clamp(18px,2.8vw,32px)' }}>
                                 <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 400, fontSize: 'clamp(52px,9.5vw,138px)', color: 'transparent', WebkitTextStroke: `1.5px ${DIM(.24)}`, lineHeight: .88, letterSpacing: '-.018em', paddingLeft: 'clamp(40px,6vw,80px)', animation: loaderGone ? 'wordRise 1.3s .34s cubic-bezier(.16,1,.3,1) both' : 'none' }}>to be sent.</h1>
                             </div>
+
 
                             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', marginBottom: 'clamp(22px,3.2vw,36px)', animation: loaderGone ? 'fadeUp .9s .9s both' : 'none' }}>
                                 <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'clamp(13px,1.1vw,16px)', color: DIM(.26), lineHeight: 2.1, maxWidth: 260, fontWeight: 400 }}>
@@ -366,6 +402,7 @@ export default function LandingScreen() {
                                 </div>
                             </div>
 
+
                             <div style={{ overflow: 'hidden', animation: loaderGone ? 'fadeIn .8s 1.1s both' : 'none' }}>
                                 <div style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'driftLeft 22s linear infinite' }}>
                                     {Array.from({ length: 8 }).map((_, i) => (
@@ -375,11 +412,14 @@ export default function LandingScreen() {
                             </div>
                         </div>
 
+
                         <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 200, background: `linear-gradient(90deg,transparent,${INK})`, pointerEvents: 'none', zIndex: 3 }} />
                     </div>
 
+
                     {/* ════ PANEL 2 ════ */}
                     <div style={{ width: '100vw', height: '100vh', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+
 
                         {/* full-bleed image — left ~55%, fades into black on all sides */}
                         <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -391,11 +431,14 @@ export default function LandingScreen() {
                             <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to right, ${INK} 28%, rgba(6,5,10,.82) 42%, rgba(6,5,10,.35) 62%, rgba(6,5,10,.1) 100%)` }} />
                         </div>
 
+
                         {/* text layer — sits on top of image */}
                         <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 'clamp(80px,10vw,116px) 48px 0 48px', height: '100%', overflow: 'hidden' }}>
 
+
                             <div style={{ position: 'relative', zIndex: 1 }}>
                                 <p style={{ fontFamily: SANS, fontSize: 9, color: RUST, letterSpacing: '.7em', textTransform: 'uppercase', fontWeight: 400, marginBottom: 'clamp(20px,3vw,30px)' }}>your diary</p>
+
 
                                 {[
                                     { text: 'Your words.', weight: 700, stroke: false, strokeOpacity: 1 },
@@ -417,6 +460,7 @@ export default function LandingScreen() {
                                     </div>
                                 ))}
 
+
                                 <div style={{ display: 'flex', gap: 40, marginTop: 'clamp(22px,3.2vw,38px)', paddingTop: 18, borderTop: `1px solid ${DIM(.07)}` }}>
                                     {[{ n: '∞', l: 'pages' }, { n: '6', l: 'covers' }, { n: '0', l: 'ads' }, { n: '8', l: 'features' }].map(({ n, l }) => (
                                         <div key={l} className="stat-card">
@@ -426,6 +470,7 @@ export default function LandingScreen() {
                                     ))}
                                 </div>
                             </div>
+
 
                             <div style={{ position: 'relative', zIndex: 1 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14, paddingTop: 18, borderTop: `1px solid ${DIM(.06)}` }}>
@@ -440,6 +485,7 @@ export default function LandingScreen() {
                                     <p style={{ fontFamily: SANS, fontSize: 7, color: DIM(.18), letterSpacing: '.32em', textTransform: 'uppercase', fontWeight: 300 }}>© {new Date().getFullYear()} drafts.</p>
                                 </div>
 
+
                                 <div style={{ overflow: 'hidden' }}>
                                     <div style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'driftLeft 18s linear infinite' }}>
                                         {Array.from({ length: 6 }).map((_, i) => (
@@ -449,8 +495,10 @@ export default function LandingScreen() {
                                 </div>
                             </div>
 
+
                         </div>
                     </div>
+
 
                 </div>
             </div>
